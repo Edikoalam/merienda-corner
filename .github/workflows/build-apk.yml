@@ -19,7 +19,8 @@ jobs:
         run: pip install flet-cli==1.0.5 flet==1.0.5 flet-charts==1.0.5
 
       - name: Build APK
-        run: flet build apk --verbose --no-rich-output
+        shell: bash
+        run: flet build apk --yes --verbose --no-rich-output < <(yes)
 
       - uses: actions/upload-artifact@v4
         with:
