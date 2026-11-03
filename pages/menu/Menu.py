@@ -15,16 +15,29 @@ GREEN = "#7C994D"
 RED = "#E04444"
 GRAY = "#B0887E"
 
-products = [
-        {"id": 1, "name": "Leche Flan", "price": 110, "units": 210, "img": "images/lecheflan.png"},
-        {"id": 2, "name": "Yema Cake", "price": 80, "units": 116, "img": "images/yemacake.png"},
-        {"id": 3, "name": "Banana Cake", "price": 100, "units": 80, "img": "images/bananabread.png"},
-        {"id": 4, "name": "Maja Blanca", "price": 700, "units": 80, "img": "images/majablanca.png"},
-        {"id": 5, "name": "Cheesy Mamon", "price": 60, "units": 166, "img": "images/mamoncake.png"},
-        {"id": 6, "name": "Yema Palitaw", "price": 60, "units": 80, "img": "images/yemapalitaw.png"},
-        {"id": 7, "name": "H&C Muffins", "price": 15, "units": 36, "img": "images/hamandcheesemuffins.png"},
-    ]
-next_id = {"value": 8}
+
+def storage_images_dir():
+    root = os.getenv("FLET_APP_STORAGE_DATA") or str(
+        Path(__file__).resolve().parent / "storage"
+    )
+    path = Path(root) / "images"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def product_image(value, width, height, **kwargs):
+    if value and not value.startswith("images/"):
+        path = storage_images_dir() / value
+        if path.exists():
+            return ft.Image(
+                src=path.read_bytes(), width=width, height=height,
+                fit=ft.BoxFit.COVER, **kwargs,
+            )
+    return ft.Image(
+        src=value or "", width=width, height=height,
+        fit=ft.BoxFit.COVER, **kwargs,
+    )
+
 
 def build(app):
 
@@ -75,7 +88,7 @@ def build(app):
                     ft.Container(
                         border_radius=12,
                         clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                        content=ft.Image(src=p["img"], width=84, height=92, fit=ft.BoxFit.COVER),
+                        content=product_image(p["img"], 84, 92),
                     ),
                     ft.Container(height=6),
                     ft.Text(p["p_name"], font_family="Poppins-Bold", size=11, color=BROWN, no_wrap=True),
@@ -168,7 +181,7 @@ def build(app):
             bgcolor=WHITE,
             ink=True,
             content=(
-                ft.Image(src=state["img"], width=180, height=180, fit=ft.BoxFit.COVER)
+                product_image(state["img"], 180, 180)
                 if state["img"] else placeholder
             ),
         )
@@ -178,14 +191,6 @@ def build(app):
 
         def assets_images_dir():
             path = Path(__file__).resolve().parents[2] / "assets" / "images"
-            path.mkdir(parents=True, exist_ok=True)
-            return path
-
-        def storage_images_dir():
-            root = os.getenv("FLET_APP_STORAGE_DATA") or str(
-                Path(__file__).resolve().parent / "storage"
-            )
-            path = Path(root) / "images"
             path.mkdir(parents=True, exist_ok=True)
             return path
 
@@ -201,19 +206,8 @@ def build(app):
             shutil.copyfile(source_path, storage_images_dir() / filename)
             return filename
 
-        def image_control(value, width, height):
-            if value and not value.startswith("images/"):
-                path = storage_images_dir() / value
-                if path.exists():
-                    return ft.Image(
-                        src=path.read_bytes(), width=width, height=height, fit=ft.BoxFit.COVER
-                    )
-            return ft.Image(
-                src=value or "", width=width, height=height, fit=ft.BoxFit.COVER
-            )
-
         def show_image(value):
-            image_box.content = image_control(value, 180, 180)
+            image_box.content = product_image(value, 180, 180)
             image_box.update()
 
         async def pick_image(e):
@@ -228,9 +222,8 @@ def build(app):
                 if not picked.path:
                     snack("Could not read that image")
                     return
-                data["img"] = save_image(picked.path, picked.name)
-                show_image(data["img"])
-                print("saving ", data)
+                state["img"] = save_image(picked.path, picked.name)
+                show_image(state["img"])
             except Exception as ex:
                 print("pick_image error:", repr(ex))
             finally:
@@ -264,7 +257,7 @@ def build(app):
                 "name": name_f.value.strip(),
                 "price": to_int(price_f),
                 "units": to_int(units_f),
-                "img": data["img"] or "images/placeholder.png",
+                "img": state["img"] or "images/placeholder.png",
             }
             conn = get_connection()
             if is_new:

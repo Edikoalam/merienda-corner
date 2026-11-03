@@ -13,24 +13,19 @@ TABLE_BG = "#f8edd3"
 ROW_BG = "#f0dcb0"
 LINE = "#e3b9a2"
 
-
+# Expanded list of warm, theme-matched colors for your pie chart and legends
+DEFAULT_PIE_COLORS = [
+    "#df7a07", "#fbe09a", "#f2b469", "#ffdc5e", "#c37960", 
+    "#894e3f", "#a74e38", "#e9522c", "#d9822b", "#f4a261", 
+    "#e76f51", "#b5838d", "#e5989b", "#ffb703", "#fb8500",
+    "#bc6c25", "#dda15e", "#9b2226", "#ae2012", "#bb3e03"
+]
 
 best_seller = {
     "name": "",        
     "units": "",       
     "image_src": "",   
 }
-
-category_sales = [
-    {"label": "Desserts & Sweets", "value": 55, "color": "#df7a07"},
-    {"label": "Kakanin / Traditional Delicacies", "value": 25, "color": "#fbe09a"},
-     {"label": "Baked Goods / Pastries", "value": 15, "color": "#f2b469"},
-     {"label": "Others", "value": 5, "color": "#ffdc5e"},
-     {"label": "Others", "value": 5, "color": "#ffdc5e"},
-     {"label": "Others", "value": 5, "color": "#ffdc5e"},
-]
-
-DEFAULT_PIE_COLORS = ["#df7a07", "#fbe09a", "#f2b469", "#ffdc5e", "#c37960", "#894e3f", "#a74e38", "#e9522c"]
 
 
 def build(app):
@@ -108,7 +103,7 @@ def build(app):
         
 
     load_products()
-    best_seller = products[0]
+    best_seller = products[0] if products else {"p_name": "", "units_sold": 0, "img": "", "price": 0}
 
 
     def on_date_picked(e: ft.Event[ft.DatePicker]):
@@ -172,9 +167,10 @@ def build(app):
     period_bar_holder = ft.Container()
     
     def build_best_seller_card():
-        if best_seller["img"]:
+        img_src = best_seller.get("img") if best_seller else None
+        if img_src:
             picture = ft.Image(
-                src=best_seller["img"],
+                src=img_src,
                 width=160,
                 height=90,
                 fit=ft.BoxFit.COVER,
@@ -190,7 +186,7 @@ def build(app):
                 content=ft.Icon(ft.Icons.CAKE, color=TERRACOTTA, size=40),
             )
     
-        units = best_seller["units_sold"] or ""
+        units = best_seller.get("units_sold", "") if best_seller else ""
         return ft.Container(
             expand=1,
             height=250,
@@ -224,7 +220,7 @@ def build(app):
                                 picture,
                                 ft.Container(height=4),
                                 ft.Text(
-                                    best_seller["p_name"] or "",  
+                                    best_seller.get("p_name", "") if best_seller else "",  
                                     size=14,
                                     color=BROWN,
                                     font_family="Poppins-Bold",
@@ -248,7 +244,7 @@ def build(app):
     click = {"status" : "percent_sales"}
     
     def build_pie_chart(key):
-        if not category_sales:
+        if not products:
             return fch.PieChart(
                 sections=[
                     fch.PieChartSection(
@@ -268,7 +264,7 @@ def build(app):
                 fch.PieChartSection(
                     value=p[key],
                     title=f"{p[key]:.0f}%",
-                    color=DEFAULT_PIE_COLORS[i],
+                    color=DEFAULT_PIE_COLORS[i % len(DEFAULT_PIE_COLORS)],
                     radius=50,
                     title_style=ft.TextStyle(
                         size=7, 
@@ -297,7 +293,7 @@ def build(app):
                             width=8,
                             height=8,
                             border_radius=ft.BorderRadius.all(4),
-                            bgcolor=DEFAULT_PIE_COLORS[i],
+                            bgcolor=DEFAULT_PIE_COLORS[i % len(DEFAULT_PIE_COLORS)],
                         ),
                         ft.Text(
                             p["p_name"],
@@ -513,7 +509,7 @@ def build(app):
 
     def refresh_statistics():
         nonlocal best_seller
-        best_seller = products[0] if products else best_seller
+        best_seller = products[0] if products else {"p_name": "", "units_sold": 0, "img": "", "price": 0}
         refresh_sales_card()
         period_bar_holder.content = build_period_bar()
         body_holder.controls = [
