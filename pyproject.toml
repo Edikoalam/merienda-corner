@@ -4,8 +4,8 @@ version = "1.0.0"
 description = "Marinel's Sari-Sari Merienda Corner"
 requires-python = ">=3.12"
 dependencies = [
-    "flet==1.0.2",
-    "flet-charts==1.0.2",
+    "flet==1.0.5",
+    "flet-charts==1.0.5",
 ]
 
 [tool.flet]
@@ -16,7 +16,4 @@ copyright = "Copyright (c) 2026 Marinel"
 
 [tool.flet.app]
 path = "."
-exclude = [".idea", "__pycache__", ".github", ".venv", "*.md"]
-
-[tool.flet.android]
-# keep defaults; add split_per_abi = true for smaller per-phone APKs
+exclude = [".idea", ".flet", "__pycache__", ".github", ".venv", "*.md"]
