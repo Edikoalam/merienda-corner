@@ -21,7 +21,7 @@ TITLE_FONT = "Anton"
 def pill_button(text, width, on_click):
     return ft.Container(
         width=width,
-        height=16,
+        height=50,
         bgcolor=LIGHT_BROWN,
         border_radius=8,
         alignment=ft.Alignment.CENTER,
@@ -31,7 +31,7 @@ def pill_button(text, width, on_click):
         content=ft.Text(
             text,
             color=CREAM,
-            size=7,
+            size=10,
             font_family="Poppins-Bold",
             weight=ft.FontWeight.BOLD,
         ),
@@ -112,9 +112,9 @@ def build(app):
 
     def add_item(item):
         con = get_connection()
-        name, unit, quantity, expiry = item["name"], item["unit"], item["quantity"], item["expiration_date"]
+        name, unit, quantity, expiry, img = item["name"], item["unit"], item["quantity"], item["expiration_date"], item["img"]
         try:
-            add_ingredient(con, name, unit, quantity, expiry)
+            add_ingredient(con, name, unit, quantity, expiry, img)
         finally:
             con.close()
         get_inventory()
@@ -129,8 +129,12 @@ def build(app):
 
     search_field = ft.TextField(
         hint_text="Search Ingredients...",
-        hint_style=ft.TextStyle(size=6.5, color="#b9a58f", font_family="Poppins"),
-        text_size=7,
+        hint_style=ft.TextStyle(size=8, color="#b9a58f", font_family="Poppins"),
+        text_size=9,
+        text_style=ft.TextStyle(
+            weight=ft.FontWeight.BOLD,
+            size=11,
+        ),
         border=ft.InputBorder.NONE,
         dense=True,
         content_padding=ft.Padding.symmetric(horizontal=0, vertical=0),
@@ -141,7 +145,7 @@ def build(app):
 
     search_box = ft.Container(
         width=118,
-        height=18,
+        height=20,
         bgcolor="white",
         border_radius=9,
         padding=ft.Padding.symmetric(horizontal=7),
@@ -187,7 +191,7 @@ def build(app):
                     left=2,
                     content=ft.Text(
                         "Manage inventory and consumption.",
-                        size=9,
+                        size=10,
                         color=BROWN,
                         font_family="Poppins",
                     ),
@@ -210,14 +214,14 @@ def build(app):
         show_rows()
 
     action_row = ft.Container(
-        height=16,
+        height=20,
         margin=ft.Margin.only(top=6, bottom=4),
         padding=ft.Padding.symmetric(horizontal=30),
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                pill_button("+ ADD INGREDIENT", 96, open_card),
-                pill_button("SAVE CHANGES", 80, lambda e: save_qty(inventory)),
+                pill_button("+ ADD INGREDIENT", 116, open_card),
+                pill_button("SAVE CHANGES", 100, lambda e: save_qty(inventory)),
             ],
         ),
     )
@@ -237,7 +241,7 @@ def build(app):
             action_row,
             ft.Container(
                 expand=True,
-                padding=ft.Padding.symmetric(horizontal=30),
+                padding=ft.Padding.symmetric(horizontal=20),
                 content=ft.Column(
                     spacing=3,
                     expand=True,

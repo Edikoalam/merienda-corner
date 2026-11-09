@@ -1,5 +1,5 @@
 import flet as ft
-from db import get_connection, get_menu, get_order_count_today, get_order_count_tomorrow
+from db import get_connection, get_menu, get_order_count_today, get_order_count_tomorrow,  order_history
 from sorting import insertionSort
 
 TERRACOTTA = "#C47A62"
@@ -11,11 +11,13 @@ WHITE = "#ffffff"
 def build(app, go):
 
     menu = []
-    conn = get_connection()
-    try:
-        menu = get_menu(conn)
-    finally:
-        conn.close()
+    def get_new_menu():
+        conn = get_connection()
+        try:
+            menu[:] = get_menu(conn)
+        finally:
+            conn.close()
+        return menu
 
     def product_card(name, units, img=None):
         return ft.Container(
@@ -231,6 +233,16 @@ def build(app, go):
     best_sellers_row = ft.Row(spacing=8)  
     
     def update_best_sellers(menu): 
+        conn = get_connection()
+        orders = order_history(conn)
+        for p in menu:
+            p["units_sold"] = 0
+        for order in orders:
+            for item in order["items"]:
+                for p in menu:
+                    if item["p_name"] == p["p_name"]:
+                        p["units_sold"] += int(item["quantity"])
+
         top = insertionSort(menu, "units_sold")
         top3 = top[:3]
         best_sellers_row.controls = [
@@ -300,12 +312,8 @@ def build(app, go):
         )
     )
 
-    sample_products = [
-            {"name": "Leche Flan",  "units": 210, "img": "images/lecheflan.png"},
-            {"name": "Yema Cake",   "units": 116, "img": "images/yemacake.png"},
-            {"name": "Banana Cake", "units": 80,  "img": "images/bananabread.png"},
-            {"name": "Maja Blanca ", "units": 45,  "img": "images/majablanca.png"},
-        ]
-    update_best_sellers(menu)
+    def on_show():
+        get_new_menu()
+        update_best_sellers(menu)
 
-    return view, lambda: None
+    return view, on_show

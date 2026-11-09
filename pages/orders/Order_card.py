@@ -29,6 +29,7 @@ def soft_shadow():
 
 
 def fmt_date(value):
+    print('naformat ung', value)
     try:
         return datetime.strptime(value, "%Y-%m-%d").strftime("%b. %d, %Y").upper()
     except (TypeError, ValueError):
@@ -41,7 +42,7 @@ def hover(e):
     e.control.update()
 
 
-def order_card(order, index, on_edit, on_status):
+def order_card(order, index, on_edit, on_status, history=False):
     status = (order["status"] or "PENDING").upper()
 
     status_menu = ft.PopupMenuButton(
@@ -76,42 +77,62 @@ def order_card(order, index, on_edit, on_status):
         ],
     )
 
-    header = ft.Row(
-        controls=[
-            ft.Text(
-                f"ORDER {order['id']:03d}",
-                weight=ft.FontWeight.BOLD,
-                font_family=FONT_BOLD,
-                size=22,
-                color=BG,
-            ),
-            ft.Row(
-                controls=[
-                    ft.Container(
-                        content=ft.Text(
-                            "EDIT",
-                            color=GREY,
-                            weight=ft.FontWeight.BOLD,
-                            font_family=FONT_BOLD,
-                            size=15,
+    if history:
+        header = ft.Row(
+            controls=[
+                ft.Text(
+                    f"ORDER {order['id']:03d}",
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_BOLD,
+                    size=22,
+                    color=BG,
+                ),
+                ft.Row(
+                    controls=[
+                        status_menu,
+                    ],
+                    spacing=5,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+    else:
+        header = ft.Row(
+            controls=[
+                ft.Text(
+                    f"ORDER {order['id']:03d}",
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_BOLD,
+                    size=22,
+                    color=BG,
+                ),
+                ft.Row(
+                    controls=[
+                        ft.Container(
+                            content=ft.Text(
+                                "EDIT",
+                                color=GREY,
+                                weight=ft.FontWeight.BOLD,
+                                font_family=FONT_BOLD,
+                                size=15,
+                            ),
+                            alignment=ft.Alignment.CENTER,
+                            height=25,
+                            width=50,
+                            bgcolor="#ffffff",
+                            border_radius=ft.BorderRadius.all(20),
+                            shadow=soft_shadow(),
+                            on_hover=hover,
+                            on_click=lambda e: on_edit(index),
+                            animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
                         ),
-                        alignment=ft.Alignment.CENTER,
-                        height=25,
-                        width=50,
-                        bgcolor="#ffffff",
-                        border_radius=ft.BorderRadius.all(20),
-                        shadow=soft_shadow(),
-                        on_hover=hover,
-                        on_click=lambda e: on_edit(index),
-                        animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
-                    ),
-                    status_menu,
-                ],
-                spacing=5,
-            ),
-        ],
-        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-    )
+                        status_menu,
+                    ],
+                    spacing=5,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
 
     product_rows = [
         ft.Row(
@@ -144,10 +165,11 @@ def order_card(order, index, on_edit, on_status):
             ),
             ft.Column(controls=product_rows, spacing=0),
             ft.Text(order["address"], color=TEXT, size=14),
+            
             ft.Row(
                 controls=[
-                    ft.Text(fmt_date(order["order_date"]), color=TEXT_SOFT, size=13),
-                    ft.Text(order["order_time"], color=TEXT_SOFT, size=13),
+                    ft.Text(fmt_date(order["type_date"]), color=TEXT_SOFT, size=13),
+                    ft.Text(order["type_time"], color=TEXT_SOFT, size=13),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),

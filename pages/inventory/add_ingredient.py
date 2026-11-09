@@ -1,6 +1,10 @@
 from datetime import datetime
 
 import flet as ft
+import os
+import shutil
+import uuid
+from pathlib import Path
 
 BROWN = "#894e3f"
 LIGHT_BROWN = "#c37960"
@@ -13,20 +17,19 @@ UNITS = ["KG", "G", "L", "ML", "PCS"]
 def box_field(hint, width, trailing=None, **kw):
     field = ft.TextField(
         hint_text=hint,
-        hint_style=ft.TextStyle(size=6.5, color="#b9a58f", font_family="Poppins"),
-        text_size=7,
+        hint_style=ft.TextStyle(size=10, color="#b9a58f", font_family="Poppins"),
+        text_size=11,
         color="#4A3525",
         border=ft.InputBorder.NONE,
         dense=True,
-        content_padding=ft.Padding.symmetric(horizontal=0, vertical=0),
-        height=13,
+        content_padding=ft.Padding.symmetric(horizontal=0),
         expand=True,
         **kw,
     )
     controls = [field] + ([trailing] if trailing else [])
     box = ft.Container(
         width=width,
-        height=14,
+        height=20,
         bgcolor="white",
         border=ft.Border.all(1, LIGHT_BROWN),
         border_radius=3,
@@ -48,7 +51,7 @@ def form_row(label, *controls):
         controls=[
             ft.Text(
                 label,
-                size=7,
+                size=9,
                 color=BROWN,
                 weight=ft.FontWeight.BOLD,
                 font_family="Poppins-Bold",
@@ -73,12 +76,12 @@ def create_add_ingredient(page, on_confirm, snack):
             )
         )
 
-    name_field, name_box = box_field("Cocoa Powder", 110)
-    unit_field, unit_box = box_field("0", 24)
-    qty_field, qty_box = box_field("0", 24, keyboard_type=ft.KeyboardType.NUMBER)
+    name_field, name_box = box_field("Cocoa Powder", 123)
+    unit_field, unit_box = box_field("0", 37, None, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter())
+    qty_field, qty_box = box_field("0", 37, None, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter(),)
     expiry_field, expiry_box = box_field(
         "mm/dd/yy",
-        70,
+        93,
         trailing=ft.Container(
             content=ft.Icon(ft.Icons.CALENDAR_MONTH, size=9, color=BROWN),
             on_click=pick_date,
@@ -88,7 +91,7 @@ def create_add_ingredient(page, on_confirm, snack):
 
     unit_text = ft.Text(
         "KG",
-        size=7,
+        size=8,
         color=BROWN,
         weight=ft.FontWeight.BOLD,
         font_family="Poppins-Bold",
@@ -105,7 +108,7 @@ def create_add_ingredient(page, on_confirm, snack):
             controls=[
                 unit_text,
                 ft.Icon(
-                    ft.Icons.ARROW_DROP_DOWN_CIRCLE_OUTLINED, size=9, color=BROWN
+                    ft.Icons.ARROW_DROP_DOWN_CIRCLE_OUTLINED, size=10, color=BROWN
                 ),
             ],
         ),
@@ -157,12 +160,101 @@ def create_add_ingredient(page, on_confirm, snack):
                 "unit": unit_value,
                 "quantity": qty,
                 "expiration_date": date_db_format(expiry_field.value) or "--",
+                "img": state["img"] or "images/placeholder.png",
             }
         )
         close_card()
 
+    def storage_images_dir():
+        root = os.getenv("FLET_APP_STORAGE_DATA") or str(
+            Path(__file__).resolve().parent / "storage"
+        )
+        path = Path(root) / "images"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+
+    def product_image(value, width, height, **kwargs):
+        if value and not value.startswith("images/"):
+            path = storage_images_dir() / value
+            if path.exists():
+                return ft.Image(
+                    src=path.read_bytes(), width=width, height=height,
+                    fit=ft.BoxFit.COVER, **kwargs,
+                )
+        return ft.Image(
+            src=value or "", width=width, height=height,
+            fit=ft.BoxFit.COVER, **kwargs,
+        )
+
+    state = {"img": None}
+    
+    placeholder = ft.Icon(ft.Icons.ADD_PHOTO_ALTERNATE, size=72, color=BROWN)
+    image_box = ft.Container(
+        width=98, height=98,
+        border=ft.Border.all(1, "#C47A62"),
+        border_radius=12,
+        alignment=ft.Alignment.CENTER,
+        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        bgcolor="white",
+        ink=True,
+        content=(
+            product_image(state["img"], 98, 98)
+            if state["img"] else placeholder
+            ),
+        )
+    
+    def is_mobile():
+        return page.platform in (ft.PagePlatform.ANDROID, ft.PagePlatform.IOS)
+    
+    def assets_images_dir():
+        path = Path(__file__).resolve().parents[2] / "assets" / "images"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    
+    def save_image(source_path, original_name):
+        extension = os.path.splitext(original_name)[1] or ".jpg"
+        filename = f"{uuid.uuid4().hex}{extension}"
+        if not is_mobile():
+            try:
+                shutil.copyfile(source_path, assets_images_dir() / filename)
+                return f"images/{filename}"
+            except OSError as ex:
+                print("assets folder not writable, using app storage:", repr(ex))
+            shutil.copyfile(source_path, storage_images_dir() / filename)
+            return filename
+    
+    def show_image(value):
+        image_box.content = product_image(value, 98, 98)
+        image_box.update()
+    
+    async def pick_image(e):
+        picker = ft.FilePicker()
+        page.services.append(picker)
+        page.update()
+        try:
+            files = await picker.pick_files(file_type=ft.FilePickerFileType.IMAGE)
+            if not files:
+                return
+            picked = files[0]
+            if not picked.path:
+                snack("Could not read that image")
+                return
+            state["img"] = save_image(picked.path, picked.name)
+            show_image(state["img"])
+        except Exception as ex:
+            print("pick_image error:", repr(ex))
+        finally:
+            if picker in page.services:
+                page.services.remove(picker)
+                page.update()
+    
+            image_box.on_click = pick_image
+
+    image_box.on_click = pick_image
+
     card = ft.Container(
-        width=262,
+        width=330,
         bgcolor=CREAM,
         border=ft.Border.all(1.5, LIGHT_BROWN),
         border_radius=12,
@@ -180,18 +272,18 @@ def create_add_ingredient(page, on_confirm, snack):
                     controls=[
                         ft.Text(
                             "ADD NEW INGREDIENT",
-                            size=13,
+                            size=15,
                             font_family="Poppins-Bold",
                             weight=ft.FontWeight.BOLD,
                             color=BROWN,
                         ),
                         ft.IconButton(
                             ft.Icons.CLOSE,
-                            icon_size=16,
+                            icon_size=18,
                             icon_color=BROWN,
                             padding=0,
-                            width=22,
-                            height=22,
+                            width=24,
+                            height=24,
                             on_click=close_card,
                         ),
                     ],
@@ -200,26 +292,14 @@ def create_add_ingredient(page, on_confirm, snack):
                     spacing=8,
                     vertical_alignment=ft.CrossAxisAlignment.START,
                     controls=[
-                        ft.Container(
-                            width=58,
-                            height=58,
-                            border=ft.Border.all(1, LIGHT_BROWN),
-                            border_radius=6,
-                            bgcolor=ROW_BG,
-                            alignment=ft.Alignment.CENTER,
-                            content=ft.Icon(
-                                ft.Icons.ADD_PHOTO_ALTERNATE, size=26, color=BROWN
-                            ),
-                            on_click=lambda e: snack("Image upload coming soon"),
-                            ink=True,
-                        ),
+                        image_box,
                         ft.Column(
                             spacing=2,
                             tight=True,
                             controls=[
                                 ft.Text(
                                     "Ingredient Name:",
-                                    size=7,
+                                    size=10,
                                     color=BROWN,
                                     weight=ft.FontWeight.BOLD,
                                     font_family="Poppins-Bold",
@@ -250,7 +330,7 @@ def create_add_ingredient(page, on_confirm, snack):
                         content=ft.Text(
                             "CONFIRM NEW INGREDIENT",
                             color=CREAM,
-                            size=9.5,
+                            size=11,
                             font_family="Poppins-Bold",
                             weight=ft.FontWeight.BOLD,
                         ),

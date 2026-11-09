@@ -31,7 +31,7 @@ def header_cell(text, width, alignment=ft.Alignment.CENTER_LEFT, left=0):
         padding=ft.Padding.only(left=left),
         content=ft.Text(
             text,
-            size=6,
+            size=9,
             color=LIGHT_BROWN,
             weight=ft.FontWeight.BOLD,
             font_family="Poppins-Bold",
@@ -46,9 +46,9 @@ def inventory_header():
         content=ft.Row(
             spacing=0,
             controls=[
-                header_cell("INGREDIENTS", 130),
-                header_cell("QTY.", 29),
-                header_cell("LEFT", 42),
+                header_cell("INGREDIENTS", 147),
+                header_cell("QTY.", 32),
+                header_cell("LEFT", 55),
                 header_cell("EXP. DATE", 65, ft.Alignment.CENTER),
                 ft.Container(width=28),
             ],
@@ -60,7 +60,7 @@ def inventory_card(item, on_consume, on_restock, open_card):
     return ft.Container(
         bgcolor=ROW_BG,
         border_radius=3,
-        height=18,
+        height=24,
         padding=ft.Padding.symmetric(horizontal=4),
         shadow=ft.BoxShadow(
             blur_radius=2, color="#20000000", offset=ft.Offset(0, 1)
@@ -73,7 +73,7 @@ def inventory_card(item, on_consume, on_restock, open_card):
                     width=130,
                     content=ft.Text(
                         item["name"] + " " + item["unit"],
-                        size=7,
+                        size=9,
                         color=BROWN,
                         weight=ft.FontWeight.BOLD,
                         font_family="Poppins-Bold",
@@ -82,39 +82,49 @@ def inventory_card(item, on_consume, on_restock, open_card):
                     ),
                 ),
                 ft.Container(
-                    width=29,
+                    width=108,
                     content=ft.Row(
                         spacing=3,
+                        alignment=ft.MainAxisAlignment.CENTER,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         controls=[
-                            round_button(
-                                ft.Icons.REMOVE,
-                                lambda e: on_consume(item),
-                                True,
+                            ft.Container(
+                                width=20,
+                                alignment=ft.Alignment.CENTER,
+                                content=round_button(
+                                    ft.Icons.REMOVE,
+                                    lambda e: on_consume(item),
+                                    True,
+                                ),
                             ),
-                            ft.Text(
-                                str(item["quantity"]),
-                                size=9,
-                                color=BROWN,
-                                weight=ft.FontWeight.BOLD,
-                                font_family="Poppins-Bold",
+                            ft.Container(
+                                width=30,
+                                alignment=ft.Alignment.CENTER,
+                                content=ft.Text(
+                                    str(item["quantity"]),
+                                    size=10,
+                                    color=BROWN,
+                                    weight=ft.FontWeight.BOLD,
+                                    font_family="Poppins-Bold",
+                                ),
+                            ),
+                            ft.Container(
+                                width=20,
+                                alignment=ft.Alignment.CENTER,
+                                content=round_button(
+                                    ft.Icons.ADD, lambda e: on_restock(item), False
+                                ),
                             ),
                         ],
                     ),
                 ),
-                ft.Container(
-                    width=42,
-                    alignment=ft.Alignment.CENTER_LEFT,
-                    content=round_button(
-                        ft.Icons.ADD, lambda e: on_restock(item), False
-                    ),
-                ),
+                
                 ft.Container(
                     width=65,
                     alignment=ft.Alignment.CENTER,
                     content=ft.Text(
                         item["expiry"],
-                        size=6,
+                        size=9,
                         color="#8B5A2B",
                         font_family="Poppins",
                     ),
@@ -124,7 +134,7 @@ def inventory_card(item, on_consume, on_restock, open_card):
                     alignment=ft.Alignment.CENTER,
                     content=ft.IconButton(
                         icon=ft.Icons.MORE_HORIZ, 
-                        scale=0.5, 
+                        scale=0.8, 
                         padding=0,
                         on_click=lambda e: open_card(item, on_consume, on_restock), 
                     ),

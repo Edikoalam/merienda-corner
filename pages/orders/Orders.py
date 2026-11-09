@@ -73,7 +73,6 @@ def build(app):
             order_card(order, i, edit_order, change_status)
             for i, order in enumerate(queue)
         ]
-        print(queue)
         if update:
             orders_column.update()
 
@@ -101,23 +100,24 @@ def build(app):
 
             if not items:
                 return "Add at least one product"
-
+                
             total = 0
-            for p_name, quantity in items:
-                    for product in menu:
-                        if product['p_name'] == p_name:
-                            total += product['price'] * quantity
+            for item in items:
+                for product in menu:
+                    if product['p_name'] == item["p_name"]:
+                        total += product['price'] * item["quantity"]
 
             if index is None:
-                
                 order_id = new_order(
                     conn,
                     data["c_name"],
-                    data["status"] or "PENDING",
+                    "PENDING",
                     data["order_type"],
                     data["address"],
                     now.strftime("%H:%M"),
                     now.strftime("%Y-%m-%d"),
+                    data["type_date"],
+                    data["type_time"]
                 )
                 if not isinstance(order_id, int):
                     return order_id or "Could not save the order"
@@ -129,11 +129,12 @@ def build(app):
                     conn,
                     order["id"],
                     data["c_name"],
-                    data["status"] or order["status"],
                     data["order_type"],
                     data["address"],
                     order["order_time"],
                     order["order_date"],
+                    data["type_date"],
+                    data["type_time"],
                     total,
                     items,
                     menu
@@ -145,7 +146,7 @@ def build(app):
             conn.close()
         load_queue()
 
-    open_popup, close_popup = create_popup(app.stack, product_names, save_order)
+    overlay, open_popup, close_popup = create_popup(app.page, product_names, save_order)
 
     def month_buttons():
         return [
@@ -203,116 +204,122 @@ def build(app):
         on_change=handle_change, 
     )
 
-    view = ft.Column(
-        alignment=ft.MainAxisAlignment.START,
+    view = ft.Stack(
         expand=True,
-        spacing=0,
         controls=[
-            ft.Container(
-                alignment=ft.Alignment.TOP_LEFT,
-                height=55,
-                padding=ft.Padding.only(left=10),
-                content=ft.Text(
-                    "QUEUE ORDERS",
-                    size=40,
-                    weight=ft.FontWeight.W_600,
-                    font_family=FONT_TITLE,
-                    color=BROWN,
-                ),
-            ),
-            ft.Container(
-                height=40,
-                padding=ft.Padding.only(left=10, right=10),
-                bgcolor=BROWN,
-                content=months_row,
-            ),
-            ft.Container(
-                height=50,
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_AROUND,
-                    controls=[
-                        ft.Container(
-                            bgcolor=GREEN,
-                            height=40,
-                            width=130,
-                            border_radius=10,
-                            shadow=ft.BoxShadow(
-                                spread_radius=0.5,
-                                blur_radius=2,
-                                color=ft.Colors.BLACK_45,
-                            ),
-                            content=ft.TextButton(
-                                content="New order",
-                                style=ft.ButtonStyle(
-                                    color=BG,
-                                    shape=ft.RoundedRectangleBorder(radius=10),
-                                    bgcolor={
-                                        ft.ControlState.DEFAULT: GREEN,
-                                        ft.ControlState.HOVERED: GREEN_HOVER,
-                                    },
-                                    text_style={
-                                        ft.ControlState.DEFAULT: ft.TextStyle(
-                                            font_family=FONT,
-                                            size=14,
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                        ft.ControlState.HOVERED: ft.TextStyle(
-                                            font_family=FONT,
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                    },
-                                ),
-                                icon=ft.Icons.ADD_BOX_OUTLINED,
-                                icon_color=BG,
-                                on_click=lambda e: open_popup(),
-                            ),
-                        ),
-                        ft.Container(
-                            bgcolor=ROSE,
-                            height=40,
-                            width=150,
-                            border_radius=10,
-                            shadow=ft.BoxShadow(
-                                spread_radius=0.5,
-                                blur_radius=2,
-                                color=ft.Colors.BLACK_45,
-                            ),
-                            content=ft.TextButton(
-                                content="Choose date",
-                                style=ft.ButtonStyle(
-                                    color=BG,
-                                    shape=ft.RoundedRectangleBorder(radius=10),
-                                    bgcolor={
-                                        ft.ControlState.DEFAULT: ROSE,
-                                        ft.ControlState.HOVERED: ROSE_HOVER,
-                                    },
-                                    text_style={
-                                        ft.ControlState.DEFAULT: ft.TextStyle(
-                                            font_family=FONT,
-                                            size=14,
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                        ft.ControlState.HOVERED: ft.TextStyle(
-                                            font_family=FONT,
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                    },
-                                ),
-                                icon=ft.Icons.CALENDAR_MONTH,
-                                icon_color=BG,
-                                on_click=lambda _: app.page.show_dialog(picker),
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            ft.Container(
-                alignment=ft.Alignment.TOP_CENTER,
-                content=orders_column,
+            ft.Column(
+                alignment=ft.MainAxisAlignment.START,
                 expand=True,
-                bgcolor=BG,
+                spacing=0,
+                controls=[
+                    ft.Container(
+                        alignment=ft.Alignment.TOP_LEFT,
+                        height=55,
+                        padding=ft.Padding.only(left=10),
+                        content=ft.Text(
+                            "QUEUE ORDERS",
+                            size=40,
+                            weight=ft.FontWeight.W_600,
+                            font_family=FONT_TITLE,
+                            color=BROWN,
+                        ),
+                    ),
+                    ft.Container(
+                        height=40,
+                        padding=ft.Padding.only(left=10, right=10),
+                        bgcolor=BROWN,
+                        content=months_row,
+                    ),
+                    ft.Container(
+                        height=50,
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                            controls=[
+                                ft.Container(
+                                    bgcolor=GREEN,
+                                    height=40,
+                                    width=130,
+                                    border_radius=10,
+                                    shadow=ft.BoxShadow(
+                                        spread_radius=0.5,
+                                        blur_radius=2,
+                                        color=ft.Colors.BLACK_45,
+                                    ),
+                                    content=ft.TextButton(
+                                        content="New order",
+                                        style=ft.ButtonStyle(
+                                            color=BG,
+                                            shape=ft.RoundedRectangleBorder(radius=10),
+                                            bgcolor={
+                                                ft.ControlState.DEFAULT: GREEN,
+                                                ft.ControlState.HOVERED: GREEN_HOVER,
+                                            },
+                                            text_style={
+                                                ft.ControlState.DEFAULT: ft.TextStyle(
+                                                    font_family=FONT,
+                                                    size=14,
+                                                    weight=ft.FontWeight.BOLD,
+                                                ),
+                                                ft.ControlState.HOVERED: ft.TextStyle(
+                                                    font_family=FONT,
+                                                    weight=ft.FontWeight.BOLD,
+                                                ),
+                                            },
+                                        ),
+                                        icon=ft.Icons.ADD_BOX_OUTLINED,
+                                        icon_color=BG,
+                                        on_click=lambda e: open_popup(),
+                                    ),
+                                ),
+                                ft.Container(
+                                    bgcolor=ROSE,
+                                    height=40,
+                                    width=150,
+                                    border_radius=10,
+                                    shadow=ft.BoxShadow(
+                                        spread_radius=0.5,
+                                        blur_radius=2,
+                                        color=ft.Colors.BLACK_45,
+                                    ),
+                                    content=ft.TextButton(
+                                        content="Choose date",
+                                        style=ft.ButtonStyle(
+                                            color=BG,
+                                            shape=ft.RoundedRectangleBorder(radius=10),
+                                            bgcolor={
+                                                ft.ControlState.DEFAULT: ROSE,
+                                                ft.ControlState.HOVERED: ROSE_HOVER,
+                                            },
+                                            text_style={
+                                                ft.ControlState.DEFAULT: ft.TextStyle(
+                                                    font_family=FONT,
+                                                    size=14,
+                                                    weight=ft.FontWeight.BOLD,
+                                                ),
+                                                ft.ControlState.HOVERED: ft.TextStyle(
+                                                    font_family=FONT,
+                                                    weight=ft.FontWeight.BOLD,
+                                                ),
+                                            },
+                                        ),
+                                        icon=ft.Icons.CALENDAR_MONTH,
+                                        icon_color=BG,
+                                        on_click=lambda _: app.page.show_dialog(picker),
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ),
+                    ft.Container(
+                        alignment=ft.Alignment.TOP_CENTER,
+                        content=orders_column,
+                        expand=True,
+                        bgcolor=BG,
+                    ),
+                ],
             ),
-        ],
+            overlay
+        ]
     )
 
     def on_show():

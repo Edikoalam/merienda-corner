@@ -1,5 +1,5 @@
 import flet as ft
-from db import get_connection, get_menu, add_menu, update_menu
+from db import get_connection, get_menu, add_menu, update_menu, delete_menu
 from sorting import insertionSort
 import os
 import shutil
@@ -93,7 +93,7 @@ def build(app):
                     ft.Container(height=6),
                     ft.Text(p["p_name"], font_family="Poppins-Bold", size=11, color=BROWN, no_wrap=True),
                     ft.Text(f"Price: ₱{p['price']}", font_family="Poppins-Bold", size=10, color=BROWN),
-                    ft.Text(f"{p['units_sold']} units", font_family="Poppins", size=10, color=BROWN),
+                    ft.Text(f"{p['units_left']} units available", font_family="Poppins", size=10, color=BROWN),
                 ],
             ),
         )
@@ -125,7 +125,11 @@ def build(app):
 
     def confirm_delete(p):
         def do_delete(e):
-            products.remove(p)
+            conn = get_connection()
+            try:    
+                delete_menu(conn, p["id"])
+            finally:
+                conn.close()
             app.page.pop_dialog()  
             app.page.pop_dialog()  
             refresh()
@@ -133,7 +137,7 @@ def build(app):
         confirm_dialog(
             [
                 ft.Text(
-                    f"Are you sure you want to delete “{p['name']}”?",
+                    f"Are you sure you want to delete “{p['p_name']}”?",
                     font_family="Poppins", size=14, color=BROWN, text_align=ft.TextAlign.CENTER,
                 ),
                 ft.Text("This action cannot be undone.", font_family="Poppins", size=12, color=BROWN),
@@ -148,7 +152,6 @@ def build(app):
             RED,
         )
 
-    #add/edit
     def open_editor(product=None):
         is_new = product is None
         data = product or {"p_name": "", "price": 0, "units_sold": 0, "img": None}
@@ -166,11 +169,11 @@ def build(app):
         name_f = field(data["p_name"], 170, "DESSERT NAME")
         name_f.text_style = ft.TextStyle(font_family="Poppins-Bold", size=16, color=BROWN)
         price_f = field(data["price"], 110)
-        units_f = field(data["units_sold"], 110)
+        units_f = field(data["units_left"], 110)
         price_f.keyboard_type = ft.KeyboardType.NUMBER
         units_f.keyboard_type = ft.KeyboardType.NUMBER
 
-        # image box (tap to choose a photo)
+
         placeholder = ft.Icon(ft.Icons.ADD_PHOTO_ALTERNATE, size=72, color=BROWN)
         image_box = ft.Container(
             width=180, height=180,

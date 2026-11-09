@@ -117,11 +117,12 @@ def build(app):
     def period_selected(period):
         nonlocal active_period
         active_period = period
-        if period == "THIS MONTH":
+        if period == "ALL-TIME":
+            load_products()
+        elif period == "THIS MONTH":
             load_products(datetime.now().strftime("%Y-%m"))
         elif period == "THIS YEAR":
             load_products(datetime.now().strftime("%Y"))
-            
             print(active_period)
         elif period == "DATE PICKER":
             app.page.show_dialog(ft.DateRangePicker(on_change=on_date_picked))
@@ -134,7 +135,7 @@ def build(app):
             row = [
                 ft.Text(
                     label,
-                    size=15,
+                    size=14,
                     color="white",
                     font_family="Anton",
                 )
@@ -157,6 +158,7 @@ def build(app):
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
                 controls=[
+                    tab("ALL-TIME"),
                     tab("THIS YEAR"),
                     tab("THIS MONTH"),
                     tab("DATE PICKER", ft.Icons.CALENDAR_MONTH),

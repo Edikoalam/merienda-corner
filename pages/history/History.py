@@ -47,7 +47,7 @@ def build(app):
             finally:
                 conn.close()
                 orders_column.controls = [
-                    order_card(order, i, edit_order, change_status)
+                    order_card(order, i, edit_order, change_status, True)
                     for i, order in enumerate(queue)
                 ]
         else:
@@ -114,7 +114,7 @@ def build(app):
             conn.close()
         load_queue()
 
-    open_popup, close_popup = create_popup(app.stack, product_names, save_order)
+    overlay, open_popup, close_popup = create_popup(app.stack, product_names, save_order)
 
     def handle_change(e: ft.Event[ft.DatePicker]):
         print("handled")
@@ -138,74 +138,80 @@ def build(app):
         on_change=lambda e : handle_change(e), 
     )
 
-    view = ft.Column(
-        alignment=ft.MainAxisAlignment.START,
+    view = ft.Stack(
         expand=True,
-        spacing=0,
         controls=[
-            ft.Container(
-                alignment=ft.Alignment.TOP_LEFT,
-                height=55,
-                padding=ft.Padding.only(left=10),
-                content=ft.Text(
-                    "ORDER HISTORY",
-                    size=40,
-                    weight=ft.FontWeight.W_600,
-                    font_family=FONT_TITLE,
-                    color=BROWN,
-                ),
-            ),
-            ft.Container(
-                height=50,
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_AROUND,
-                    controls=[
-                        ft.Container(
-                            bgcolor=ROSE,
-                            height=40,
-                            width=200,
-                            border_radius=10,
-                            shadow=ft.BoxShadow(
-                                spread_radius=0.5,
-                                blur_radius=2,
-                                color=ft.Colors.BLACK_45,
-                            ),
-                            content=ft.TextButton(
-                                content="CHOOSE DATE RANGE",
-                                style=ft.ButtonStyle(
-                                    color=BG,
-                                    shape=ft.RoundedRectangleBorder(radius=10),
-                                    bgcolor={
-                                        ft.ControlState.DEFAULT: ROSE,
-                                        ft.ControlState.HOVERED: ROSE_HOVER,
-                                    },
-                                    text_style={
-                                        ft.ControlState.DEFAULT: ft.TextStyle(
-                                            font_family=FONT,
-                                            size=14,
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                        ft.ControlState.HOVERED: ft.TextStyle(
-                                            font_family=FONT,
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                    },
-                                ),
-                                icon=ft.Icons.CALENDAR_MONTH,
-                                icon_color=BG,
-                                on_click=lambda _: app.page.show_dialog(picker),
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            ft.Container(
-                alignment=ft.Alignment.TOP_CENTER,
-                content=orders_column,
+            ft.Column(
+                alignment=ft.MainAxisAlignment.START,
                 expand=True,
-                bgcolor=BG,
+                spacing=0,
+                controls=[
+                    ft.Container(
+                        alignment=ft.Alignment.TOP_LEFT,
+                        height=55,
+                        padding=ft.Padding.only(left=10),
+                        content=ft.Text(
+                            "ORDER HISTORY",
+                            size=40,
+                            weight=ft.FontWeight.W_600,
+                            font_family=FONT_TITLE,
+                            color=BROWN,
+                        ),
+                    ),
+                    ft.Container(
+                        height=50,
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                            controls=[
+                                ft.Container(
+                                    bgcolor=ROSE,
+                                    height=40,
+                                    width=200,
+                                    border_radius=10,
+                                    shadow=ft.BoxShadow(
+                                        spread_radius=0.5,
+                                        blur_radius=2,
+                                        color=ft.Colors.BLACK_45,
+                                    ),
+                                    content=ft.TextButton(
+                                        content="CHOOSE DATE RANGE",
+                                        style=ft.ButtonStyle(
+                                            color=BG,
+                                            shape=ft.RoundedRectangleBorder(radius=10),
+                                            bgcolor={
+                                                ft.ControlState.DEFAULT: ROSE,
+                                                ft.ControlState.HOVERED: ROSE_HOVER,
+                                            },
+                                            text_style={
+                                                ft.ControlState.DEFAULT: ft.TextStyle(
+                                                    font_family=FONT,
+                                                    size=14,
+                                                    weight=ft.FontWeight.BOLD,
+                                                ),
+                                                ft.ControlState.HOVERED: ft.TextStyle(
+                                                    font_family=FONT,
+                                                    weight=ft.FontWeight.BOLD,
+                                                ),
+                                            },
+                                        ),
+                                        icon=ft.Icons.CALENDAR_MONTH,
+                                        icon_color=BG,
+                                        on_click=lambda _: app.page.show_dialog(picker),
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ),
+                    ft.Container(
+                        alignment=ft.Alignment.TOP_CENTER,
+                        content=orders_column,
+                        expand=True,
+                        bgcolor=BG,
+                    ),
+                ],
             ),
-        ],
+            overlay
+        ]
     )
 
     def on_show():

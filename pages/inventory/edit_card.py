@@ -1,5 +1,7 @@
 import flet as ft
 from datetime import datetime
+import os
+from pathlib import Path
 from pages.inventory.confirmations import add_confirmation_tabs
 from db import (get_connection,
                 update_qty,
@@ -21,8 +23,8 @@ def date_db_format(date):
 
 def round_button(icon, on_click, filled):
     return ft.Container(
-        width=11,
-        height=11,
+        width=13,
+        height=13,
         border_radius=6,
         bgcolor="#e0b84a" if filled else "#fff8e5",
         border=None if filled else ft.Border.all(1, "#c9b57a"),
@@ -88,7 +90,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                     controls=[
                         ft.Text(
                             value=f"BATCH {selected_batch}",
-                            size=7,
+                            size=11,
                             color="#894e3f",
                             weight=ft.FontWeight.BOLD,
                             font_family="Poppins-Bold",
@@ -99,8 +101,8 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                     spacing=2,
                 ),
                 bgcolor="#efd7a6",
-                width=80,
-                height=14,
+                width=90,
+                height=17,
                 border_radius=15,
                 padding=ft.Padding.symmetric(horizontal=10),
                 shadow=ft.BoxShadow(
@@ -112,7 +114,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             ),
             items=[
                 ft.PopupMenuItem(
-                    content=ft.Text(batch),
+                    content=ft.Text(batch, size= 12),
                     on_click=lambda e, batch=f"BATCH {batch}" : update_selected_batch(e, batch),
                 )
                 for batch in range (len(item["batches"]))
@@ -175,10 +177,9 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             )
         )
         
-        
         qty_text = ft.Text(
             str(item["quantity"]),
-            size=9,
+            size=11,
             color="#894e3f",
             weight=ft.FontWeight.BOLD,
             font_family="Poppins-Bold",
@@ -207,8 +208,44 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             item["quantity"] = 1
             on_consume(item)
 
+        def storage_images_dir():
+            root = os.getenv("FLET_APP_STORAGE_DATA") or str(
+                Path(__file__).resolve().parent / "storage"
+            )
+            path = Path(root) / "images"
+            path.mkdir(parents=True, exist_ok=True)
+            return path
+
+
+        def product_image(value, width, height, **kwargs):
+            if value and not value.startswith("images/"):
+                path = storage_images_dir() / value
+                if path.exists():
+                    return ft.Image(
+                        src=path.read_bytes(), width=width, height=height,
+                        fit=ft.BoxFit.COVER, **kwargs,
+                    )
+            return ft.Image(
+                src=value or "", width=width, height=height,
+                fit=ft.BoxFit.COVER, **kwargs,
+            )
+
+        placeholder =ft.Icon( ft.Icons.ADD_PHOTO_ALTERNATE, size=26, color="#894e3f"),
+        image_box = ft.Container(
+            width=110, height=110,
+            border=ft.Border.all(1, "#894e3f"),
+            border_radius=6,
+            alignment=ft.Alignment.CENTER,
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            bgcolor="#fdeccb",
+            content=(
+                product_image(item["img"], 110, 110)
+                if item["img"] else placeholder
+                ),
+            )
+
         return ft.Container(
-            width=280,
+            width=330,
             bgcolor="#fff8e5",
             border=ft.Border.all(1.5, "#c37960"),
             border_radius=12,
@@ -226,18 +263,18 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                         controls=[
                             ft.Text(
                                 item["name"].upper(),
-                                size=16,
+                                size=18,
                                 font_family="Poppins-Bold",
                                 weight=ft.FontWeight.BOLD,
                                 color="#894e3f",
                             ),
                             ft.IconButton(
                                 ft.Icons.CLOSE,
-                                icon_size=16,
+                                icon_size=18,
                                 icon_color="#894e3f",
                                 padding=0,
-                                width=22,
-                                height=22,
+                                width=25,
+                                height=25,
                                 on_click=close_edit_card,
                             ),
                         ],
@@ -247,27 +284,15 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                         vertical_alignment=ft.CrossAxisAlignment.START,
                         controls=[
                             ft.Column(
-                                spacing=4,
+                                spacing=6,
                                 tight=True,
                                 controls=[
-                                    ft.Container(
-                                        width=90,
-                                        height=90,
-                                        border=ft.Border.all(1, "#c37960"),
-                                        border_radius=6,
-                                        bgcolor="#fdeccb",
-                                        alignment=ft.Alignment.CENTER,
-                                        content=ft.Icon(
-                                            ft.Icons.ADD_PHOTO_ALTERNATE, size=26, color="#894e3f"
-                                        ),
-                                        on_click=lambda e: snack("Image upload coming soon"),
-                                        ink=True,
-                                    ),
-                                    pill_button("DELETE ITEM", 90, 20, 10, "#8f0000", 3, lambda e: handle_delete(e)),
+                                    image_box,
+                                    pill_button("DELETE ITEM", 110, 25, 11, "#8f0000", 3, lambda e: handle_delete(e)),
                                 ]
                             ),
                             ft.Column(
-                                spacing=1,
+                                spacing=4,
                                 tight=True,
                                 controls=[
                                     ft.Row(
@@ -278,14 +303,14 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                                 "TOTAL STOCKS LEFT: ",
                                                 font_family="Poppins-Bold",
                                                 weight=ft.FontWeight.BOLD,
-                                                size=11,
+                                                size=12,
                                                 color="#894e3f",
                                             ),
                                             ft.Text(
                                                 str(item["quantity"]),
                                                 font_family="Poppins-Bold",
                                                 weight=ft.FontWeight.BOLD,
-                                                size=11,
+                                                size=12,
                                                 color="#7c994d",
                                             ),
                                         ],
@@ -298,13 +323,13 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                                 "LATEST EXPIRY:",
                                                 font_family="Poppins-Bold",
                                                 weight=ft.FontWeight.BOLD,
-                                                size=11,
+                                                size=12,
                                                 color="#894e3f",
                                             ),
                                             ft.Text(
                                                 date_format(item["expiry"]),
                                                 font_family="Poppins",
-                                                size=10,
+                                                size=12,
                                                 color="#dd433f",
                                             ),
                                         ],
@@ -318,7 +343,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                                 True,
                                             ),
                                             ft.Container(
-                                                width=20,
+                                                width=24,
                                                 alignment=ft.Alignment.CENTER,
                                                 border=ft.Border.all(1, "#c37960"),
                                                 border_radius=3,
@@ -332,14 +357,14 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             ft.Container(
                                                 width=5
                                             ),
-                                            pill_button("SAVE QUANTITY", 80, 15,7, "#c37960", 8,  lambda e: save_qty(e, item)),
+                                            pill_button("SAVE QUANTITY", 90, 17,10, "#c37960", 8,  lambda e: save_qty(e, item)),
                                         ]
                                     ),
                                     ft.Text(
                                         "Select Batch to Edit:",
                                         font_family="Poppins-Bold",
                                         color="#894e3f",
-                                        size=10,
+                                        size=11,
                                     ),
                                     batches,
                                     batch_info
@@ -350,7 +375,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                     ft.Divider(height=1, color="#894e3f"),
                     ft.Container(
                         height=30,
-                        width=256,
+                        width=320,
                         bgcolor="#894e3f",
                         alignment=ft.Alignment.CENTER,
                         border_radius=6,
@@ -362,7 +387,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                     ft.Icon(ft.Icons.ADD, size=10, color="white"),
                                     ft.Text(
                                         "Add New Batch",
-                                        size=10,
+                                        size=11,
                                         font_family="Poppins-Bold",
                                         weight=ft.FontWeight.BOLD,
                                         color="white",
@@ -379,11 +404,14 @@ def create_edit_card(snack, page, get_inventory, show_rows):
 
 
     def open_new_batch_card(item, e=None):
-        expiry_text.value = "Select date"
-        expiry_text.value = None
-        overlay.content.controls.append(new_batch_card(item))
-        overlay.visible = True
-        overlay.update()
+        if len(overlay.content.controls) == 2:
+            snack("Only add one batch at a time") 
+        else:
+            expiry_text.value = "Select date"
+            expiry_text.value = None
+            overlay.content.controls.append(new_batch_card(item))
+            overlay.visible = True
+            overlay.update()
 
     def close_new_batch_card(e=None):
         overlay.content.controls.pop()
@@ -391,15 +419,15 @@ def create_edit_card(snack, page, get_inventory, show_rows):
 
     expiry_text = ft.Text(
         "Select date", 
-        size=9, 
+        size=10, 
         color="#894e3f", 
         font_family="Poppins",
         margin=ft.Margin.only(left=4)
         )
 
     expiry_field = ft.Container(
-        width=100,
-        height=18,
+        width=120,
+        height=20,
         border_radius=4,
         bgcolor="#fff8e5",
         border=ft.Border.all(1, "#c37960"),
@@ -410,7 +438,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                 expiry_text,
                 ft.Icon(
                     ft.Icons.CALENDAR_MONTH,
-                    size=11,
+                    size=12,
                     color="#894e3f",
                     width=18,
                     height=18,
@@ -423,9 +451,9 @@ def create_edit_card(snack, page, get_inventory, show_rows):
 
     new_batch_quantity = ft.TextField(
         text_align=ft.TextAlign.LEFT,
-        height=15,
+        height=20,
         border=ft.NoInputBorder(),
-        width=100,
+        width=120,
         dense=True,
         text_size=9,
         content_padding=ft.Padding.only(left=5),
@@ -435,7 +463,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
         hint_text="Enter quantity",
         hint_style=ft.TextStyle(
             font_family="Poppins",
-            size=7,
+            size=10,
             color="#894e3f"
         )
     )
@@ -480,7 +508,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
     
     def new_batch_card(item):
         return ft.Container(
-            width=280,
+            width=330,
             bgcolor="#fff8e5",
             border=ft.Border.all(1.5, "#c37960"),
             border_radius=12,
@@ -499,18 +527,18 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                         controls=[
                             ft.Text(
                                 "ADD NEW BATCH",
-                                size=16,
+                                size=18,
                                 font_family="Poppins-Bold",
                                 weight=ft.FontWeight.BOLD,
                                 color="#894e3f",
                             ),
                             ft.IconButton(
                                 ft.Icons.CLOSE,
-                                icon_size=16,
+                                icon_size=18,
                                 icon_color="#894e3f",
                                 padding=0,
-                                width=22,
-                                height=22,
+                                width=25,
+                                height=25,
                                 on_click=close_new_batch_card,
                             ),
                         ],
@@ -520,7 +548,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                         alignment=ft.Alignment.CENTER,
                         margin=ft.Margin.only(top=7),
                         border_radius=6,
-                        width=256,
+                        width=330,
                         padding=ft.Padding.only(left=10, right=10),
                         border=ft.Border.all(1, "#c37960"),
                         content=ft.Column(
@@ -528,9 +556,9 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                             tight=True,
                             controls=[
                                 ft.Text(
-                                    f"BATCH ({len(item["batches"]) + 1})",
+                                    f"BATCH ({len(item["batches"])})",
                                     text_align=ft.TextAlign.LEFT,
-                                    size=10,
+                                    size=11,
                                     font_family="Poppins-Bold",
                                     weight=ft.FontWeight.BOLD,
                                     color="#894e3f",
@@ -547,7 +575,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             controls=[
                                                 ft.Text(
                                                     "Expiration Date:",
-                                                    size=7,
+                                                    size=9,
                                                     font_family="Poppins",
                                                     color="#894e3f",
                                                     margin=ft.Margin.only(top=3),
@@ -561,14 +589,14 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             controls=[
                                                 ft.Text(
                                                     "Quantity:",
-                                                    size=7,
+                                                    size=9,
                                                     font_family="Poppins",
                                                     color="#894e3f",
                                                     margin=ft.Margin.only(top=3),
                                                 ),
                                                 ft.Container(
-                                                    width=100,
-                                                    height=18,
+                                                    width=120,
+                                                    height=20,
                                                     border_radius=4,
                                                     bgcolor="#fff8e5",
                                                     border=ft.Border.all(1, "#c37960"),
@@ -584,7 +612,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                     controls=[
                                         ft.Container(
                                             width=70,
-                                            height=15,
+                                            height=18,
                                             bgcolor="transparent",
                                             alignment=ft.Alignment.CENTER,
                                             on_click=close_new_batch_card,
@@ -593,14 +621,14 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             content=ft.Text(
                                                 "CANCEL",
                                                 color="#894e3f",
-                                                size=10,
+                                                size=12,
                                                 font_family="Poppins-Bold",
                                                 weight=ft.FontWeight.BOLD,
                                             ),
                                         ),
                                         ft.Container(
-                                            width=100,
-                                            height=17,
+                                            width=110,
+                                            height=19,
                                             bgcolor="#894e3f",
                                             border_radius=5,
                                             alignment=ft.Alignment.CENTER,
@@ -611,7 +639,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             content=ft.Text(
                                                 "SAVE NEW BATCH",
                                                 color="#fff8e5",
-                                                size=9,
+                                                size=11,
                                                 font_family="Poppins-Bold",
                                                 weight=ft.FontWeight.BOLD,
                                             ),

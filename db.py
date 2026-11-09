@@ -29,8 +29,8 @@ def init_db(conn):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             p_name TEXT NOT NULL UNIQUE,
             price INTEGER NOT NULL,
-            units_sold INTEGER DEFAULT 0,
-            img TEXT
+            units_left INTEGER DEFAULT 0,
+            img TEXT DEFAULT ''
         )
     ''')
 
@@ -43,6 +43,8 @@ def init_db(conn):
             address TEXT NOT NULL,
             order_time TEXT NOT NULL,
             order_date TEXT NOT NULL,
+            type_date TEXT NOT NULL,
+            type_time TEXT NOT NULL,
             total INTEGER
         )
     ''')
@@ -62,7 +64,8 @@ def init_db(conn):
             ingredient_id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             unit TEXT NOT NULL,
-            quantity INTEGER NOT NULL
+            quantity INTEGER NOT NULL,
+            img TEXT 
         )
     ''')
 
@@ -90,7 +93,7 @@ def add_menu(conn, p_name, price, img, units=0):
                 return "Menu item already exists."
         else:
             cursor.execute('''
-                INSERT INTO menu(p_name, price, img, units_sold)
+                INSERT INTO menu(p_name, price, img, units_left)
                 VALUES (?, ?, ?, ?)
             ''', (p_name, price, img, units))
             conn.commit()
@@ -112,7 +115,7 @@ def update_menu(conn, menu_id, p_name, price, img, units):
         else:
             cursor.execute('''
                 UPDATE menu
-                SET p_name = ?, price = ?, img = ?, units_sold = ?
+                SET p_name = ?, price = ?, img = ?, units_left = ?
                 WHERE id = ?
             ''', (p_name, price, img,units, menu_id))
             conn.commit()
@@ -132,14 +135,13 @@ def delete_menu(conn, menu_id):
     except sqlite3.Error as e:
         print(f"Failed to delete menu item: {e}")
 
-
 def get_menu(conn):
     c = conn.cursor()
     c.execute("SELECT *, price FROM menu")
     rows = c.fetchall()
     return [dict(row) for row in rows]
 
-def new_order(conn, c_name, status, order_type, address, order_time, order_date):
+def new_order(conn, c_name, status, order_type, address, order_time, order_date, type_date, type_time):
     cursor = conn.cursor()
 
     try:
@@ -147,16 +149,15 @@ def new_order(conn, c_name, status, order_type, address, order_time, order_date)
             return "Complete the required values"
         
         cursor.execute('''
-            INSERT INTO orders (c_name, status, order_type, address, order_time, order_date)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO orders (c_name, status, order_type, address, order_time, order_date, type_date, type_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 
-        ''', (c_name, status, order_type, address, order_time, order_date)
+        ''', (c_name, status, order_type, address, order_time, order_date, type_date, type_time)
         )
 
         order_id = cursor.lastrowid
 
         print("nasave sa db")
-
 
         conn.commit()
 
@@ -173,9 +174,9 @@ def add_order_items(conn, order_id, items, menu):
         for m in menu:
             if item["p_name"] == m["p_name"]:
                 item["menu_id"] = m["id"] 
-                m["units_sold"] += item["quantity"]
+                if m["units_left"] != 0:
+                    m["units_left"] -= item["quantity"]
        
-
     try:
         cursor.executemany('''
             INSERT INTO order_items (order_id, menu_id, quantity)
@@ -186,17 +187,16 @@ def add_order_items(conn, order_id, items, menu):
         cursor.executemany(
             """
                 UPDATE menu
-                SET units_sold = ?
+                SET units_left = ?
                 WHERE id = ?
             """,
-            [(m["units_sold"], m["id"]) for m in menu]
+            [(m["units_left"], m["id"]) for m in menu]
         )
 
         conn.commit()
     except sqlite3.Error as e:
         conn.rollback()
         print(f"Failed to add order items: {e}")
-
 
 def insert_total(conn, order_id, total):
     cursor = conn.cursor()
@@ -214,24 +214,25 @@ def insert_total(conn, order_id, total):
         conn.rollback()
         print(f"Failed to update total: {e}")
 
-def update_order(conn, order_id, c_name, status, order_type, address, order_time, order_date, total, items, menu):
+def update_order(conn, order_id, c_name, order_type, address, order_time, order_date,type_date, type_time, total, items, menu):
     c = conn.cursor()
     try:        
         for item in items:
             for m in menu:
                 if item["p_name"] == m["p_name"]:
                     item["menu_id"] = m["id"] 
-                    m["units_sold"] += item["quantity"]
+                    if m["units_left"] != 0:
+                        m["units_left"] -= item["quantity"]
         
-        if not c_name or not status or not order_type or not address or not order_time or not order_date or total is None:
+        if not c_name  or not order_type or not address or not order_time or not order_date or total is None:
             return "Complete the required values"
         
         
         c.execute('''
             UPDATE orders
-            SET c_name = ?, status = ?, order_type = ?, address = ?, order_time = ?, order_date = ?, total = ?
+            SET c_name = ?, order_type = ?, address = ?, order_time = ?, order_date = ?, total = ?, type_date = ?, type_time = ?
             WHERE id = ?
-        ''', (c_name, status, order_type, address, order_time, order_date, total, order_id))
+        ''', (c_name, order_type, address, order_time, order_date, total,type_date, type_time, order_id))
 
         c.execute('DELETE FROM order_items WHERE order_id = ?', (order_id,))
 
@@ -245,10 +246,10 @@ def update_order(conn, order_id, c_name, status, order_type, address, order_time
         c.executemany(
             """
                 UPDATE menu
-                SET units_sold = ?
+                SET units_left = ?
                 WHERE id = ?
             """,
-            [(m["units_sold"], m["id"]) for m in menu]
+            [(m["units_left"], m["id"]) for m in menu]
         )
 
         conn.commit()
@@ -260,7 +261,7 @@ def active_queue(conn):
     c = conn.cursor()
     try:
         c.execute('''
-            SELECT id, c_name, status, order_type, address, order_time, order_date, total
+            SELECT *
             FROM orders
             WHERE status = 'PENDING' OR status = 'pending'    
         ''')
@@ -291,7 +292,7 @@ def order_history(conn):
     print("history")
     try:
         c.execute('''
-            SELECT id, c_name, status, order_type, address, order_time, order_date, total
+            SELECT *
             FROM orders
             WHERE status != 'PENDING'
         ''',)
@@ -385,9 +386,9 @@ def get_orders_by_specific_day(conn, target_day: str):
     print("gumana day start")
     try:
         cursor = conn.cursor()
-        cursor.execute("""SELECT id, c_name, status, order_type, address, order_time, order_date, total 
+        cursor.execute("""SELECT * 
                         FROM orders 
-                        WHERE order_date = ?
+                        WHERE type_date = ?
                         AND status = 'PENDING' OR status = 'pending' 
                         ORDER BY order_time ASC""", (target_day,))
         rows = cursor.fetchall()
@@ -448,7 +449,7 @@ def get_orders_by_specific_month(conn, year_month: str):
     try:
         cursor.execute("""
         SELECT * FROM orders 
-        WHERE order_date LIKE ? 
+        WHERE type_date LIKE ? 
         AND status = 'PENDING' OR status = 'pending' 
         ORDER BY order_date ASC""", (f"%-{year_month}-%",))
         rows = cursor.fetchall()
@@ -523,7 +524,7 @@ def get_order_items_by_order_id(order_id: int):
 def get_inventory_list(conn):
   c = conn.cursor()
   try:
-    c.execute("SELECT ingredient_id, name, unit, quantity FROM inventory")
+    c.execute("SELECT ingredient_id, name, unit, quantity, img FROM inventory")
     rows = c.fetchall()
     inventory_list = [dict(row) for row in rows]
 
@@ -562,8 +563,7 @@ def update_qty(conn, ingredient_id, quantity):
         print(f"Failed to update ingredient: {e}")
         return None
     
-
-def add_ingredient(conn, name, unit, quantity, expiry):
+def add_ingredient(conn, name, unit, quantity, expiry, img):
     cursor = conn.cursor()
     today = datetime.now().strftime("%Y-%m-%d")
     try:
@@ -572,10 +572,10 @@ def add_ingredient(conn, name, unit, quantity, expiry):
 
         cursor.execute(
             """
-                INSERT INTO inventory (name, unit, quantity)
-                VALUES (?, ?, ?)
+                INSERT INTO inventory (name, unit, quantity, img)
+                VALUES (?, ?, ?, ?)
             """,
-            (name, unit, quantity),
+            (name, unit, quantity, img),
         )
         ingredient_id = cursor.lastrowid
         print("added ingre")
@@ -704,6 +704,26 @@ if __name__ == "__main__":
     menu_dict = {m['p_name']: m for m in menu_rows}
 
     # Fixed and clean sample orders with correct calculated totals
+    sample_menu = [
+        ("Leche Flan", 110,"images/lecheflan.png"),
+        ("Yema Cake",80, "images/yemacake.png"),
+        ("Banana Cake", 100,"images/bananabread.png"),
+        ("Maja Blanca", 700, "images/majablanca.png"),
+        ("Cheesy Mamon", 60, "images/mamoncake.png"),
+        ("Yema Palitaw", 60, "images/yemapalitaw.png"),
+        ("H&C Muffins", 15, "images/hamandcheesemuffins.png"),
+    ]
+
+    for p_name, price, img in sample_menu:
+        error = add_menu(conn, p_name, price, img)
+        if error:
+            print(f"{p_name}: {error}")
+
+    menu_rows = get_menu(conn)
+    print(menu_rows)
+    menu_dict = {m['p_name']: m for m in menu_rows}
+
+    # Fixed and clean sample orders with correct calculated totals
     sample_orders = [
         {
             "c_name": "Jane Doe",
@@ -711,7 +731,9 @@ if __name__ == "__main__":
             "order_type": "DELIVERY",
             "address": "456 Rose Street, Apt 2B",
             "order_time": "18:45",
-            "order_date": day(0),
+            "order_date": "2026-11-08",
+            "type_time": "10:00 AM",
+            "type_date": "2026-11-09",
             "items": [
                 {"p_name": "Leche Flan", "quantity": 2},
                 {"p_name": "Yema Cake", "quantity": 1},
@@ -724,7 +746,9 @@ if __name__ == "__main__":
             "order_type": "PICKUP",
             "address": "Walk-in",
             "order_time": "12:30",
-            "order_date": day(0),
+            "order_date": "2026-11-08",
+            "type_time": "05:00 PM",
+            "type_date": "2026-11-08",
             "items": [
                 {"p_name": "Cheesy Mamon", "quantity": 4},
                 {"p_name": "Yema Palitaw", "quantity": 3},
@@ -736,7 +760,9 @@ if __name__ == "__main__":
             "order_type": "DELIVERY",
             "address": "12 Mabini Street, Malolos",
             "order_time": "19:15",
-            "order_date": day(0),
+            "order_date": "2026-11-08",
+            "type_time": "03:30 PM",
+            "type_date": "2026-11-10",
             "items": [
                 {"p_name": "Maja Blanca", "quantity": 1},
                 {"p_name": "Banana Cake", "quantity": 2},
@@ -748,7 +774,9 @@ if __name__ == "__main__":
             "order_type": "DELIVERY",
             "address": "88 Sampaguita Avenue",
             "order_time": "11:00",
-            "order_date": day(1),
+            "order_date": "2026-11-09",
+            "type_time": "09:00 AM",
+            "type_date": "2026-11-11",
             "items": [
                 {"p_name": "Yema Cake", "quantity": 2},
                 {"p_name": "H&C Muffins", "quantity": 10},
@@ -760,7 +788,9 @@ if __name__ == "__main__":
             "order_type": "PICKUP",
             "address": "Walk-in",
             "order_time": "16:20",
-            "order_date": day(3),
+            "order_date": "2026-11-11",
+            "type_time": "02:00 PM",
+            "type_date": "2026-11-12",
             "items": [
                 {"p_name": "Leche Flan", "quantity": 3},
                 {"p_name": "Cheesy Mamon", "quantity": 6},
@@ -772,7 +802,9 @@ if __name__ == "__main__":
             "order_type": "DELIVERY",
             "address": "7 Rizal Street",
             "order_time": "20:05",
-            "order_date": day(-1),
+            "order_date": "2026-11-07",
+            "type_time": "09:30 PM",
+            "type_date": "2026-11-07",
             "items": [
                 {"p_name": "Banana Cake", "quantity": 1},
                 {"p_name": "Yema Palitaw", "quantity": 2},
@@ -785,7 +817,9 @@ if __name__ == "__main__":
             "order_type": "PICKUP",
             "address": "Walk-in",
             "order_time": "13:40",
-            "order_date": day(-3),
+            "order_date": "2026-11-05",
+            "type_time": "04:00 PM",
+            "type_date": "2026-11-05",
             "items": [
                 {"p_name": "Maja Blanca", "quantity": 2},
             ],
@@ -796,7 +830,9 @@ if __name__ == "__main__":
             "order_type": "DELIVERY",
             "address": "21 Bonifacio Road",
             "order_time": "17:10",
-            "order_date": day(-5),
+            "order_date": "2026-11-03",
+            "type_time": "10:30 AM",
+            "type_date": "2026-11-04",
             "items": [
                 {"p_name": "Leche Flan", "quantity": 4},
                 {"p_name": "Yema Cake", "quantity": 2},
@@ -808,7 +844,9 @@ if __name__ == "__main__":
             "order_type": "DELIVERY",
             "address": "5 Luna Street",
             "order_time": "14:25",
-            "order_date": day(-6),
+            "order_date": "2026-11-02",
+            "type_time": "12:00 PM",
+            "type_date": "2026-11-03",
             "items": [
                 {"p_name": "Cheesy Mamon", "quantity": 5},
             ],
@@ -819,7 +857,9 @@ if __name__ == "__main__":
             "order_type": "PICKUP",
             "address": "Walk-in",
             "order_time": "10:15",
-            "order_date": day(-7),
+            "order_date": "2026-11-01",
+            "type_time": "03:00 PM",
+            "type_date": "2026-11-01",
             "items": [
                 {"p_name": "Yema Palitaw", "quantity": 4},
                 {"p_name": "Banana Cake", "quantity": 1},
@@ -839,6 +879,8 @@ if __name__ == "__main__":
                 order["address"],
                 order["order_time"],
                 order["order_date"],
+                order["type_date"],
+                order["type_time"]
             )
             if not isinstance(order_id, int):
                 print(f"{order['c_name']}: {order_id}")

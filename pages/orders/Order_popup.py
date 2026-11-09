@@ -1,4 +1,5 @@
 import flet as ft
+from datetime import datetime
 
 from pages.orders.Popup_menu import popup_menu
 
@@ -19,10 +20,99 @@ ORDER_TYPES = ["DELIVERY", "PICKUP"]
 ORDER_STATUSES = ["PENDING", "DONE", "CANCELLED"]
 
 
-def create_popup(stack, get_products, on_save):
+def create_popup(page, get_products, on_save):
     items = []
     products = []
     state = {"index": None, "type": None, "status": None}
+
+    def pick_date(e):
+        def on_change(ev):
+            if ev.control.value:
+                datepicker.controls[0].value = ev.control.value.strftime("%Y-%m-%d")
+                datepicker.update()
+
+        page.show_dialog(
+            ft.DatePicker(
+                first_date=datetime(2020, 1, 1),
+                last_date=datetime(2100, 12, 31),
+                on_change=on_change,
+            )
+        )
+
+    datepicker = ft.Stack(
+        width=150,
+        height=35,
+        controls=[
+            ft.TextField(
+                label="DATE",
+                label_style=ft.TextStyle(
+                    size=12,
+                    weight=ft.FontWeight.BOLD,
+                    color="#3b2a22",
+                    font_family=FONT_BOLD,
+                ),
+                width=150,
+                height=35,
+                color="#3b2a22",
+                text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, size=11),
+                content_padding=ft.Padding.only(left=10, right=30),
+                filled=True,
+                bgcolor=CREAM,
+                read_only=True,
+                border=ft.OutlineInputBorder(side=ft.BorderSide(color=ft.Colors.WHITE)),
+            ),
+            ft.Container(
+                content=ft.Icon(ft.Icons.CALENDAR_MONTH, size=16, color="#894e3f"),
+                on_click=pick_date,
+                right=8,
+                top=9,
+            ),
+        ],
+    )
+
+    def pick_time(e):
+        def on_change(ev):
+            if ev.control.value:
+                timepicker.controls[0].value = ev.control.value.strftime("%I:%M %p")
+                timepicker.update()
+
+        page.show_dialog(
+            ft.TimePicker(
+                value=datetime.now().time(),
+                on_change=on_change,
+            )
+        )
+
+    timepicker = ft.Stack(
+        width=105,
+        height=35,
+        controls=[
+            ft.TextField(
+                label="TIME",
+                label_style=ft.TextStyle(
+                    size=12,
+                    weight=ft.FontWeight.BOLD,
+                    color="#3b2a22",
+                    font_family=FONT_BOLD,
+                ),
+                width=105,
+                height=35,
+                color="#3b2a22",
+                text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, size=11),
+                content_padding=ft.Padding.only(left=10, right=30),
+                filled=True,
+                bgcolor=CREAM,
+                read_only=True,
+                border=ft.OutlineInputBorder(side=ft.BorderSide(color=ft.Colors.WHITE)),
+            ),
+            ft.Container(
+                content=ft.Icon(ft.Icons.ACCESS_TIME, size=16, color="#894e3f"),
+                on_click=pick_time,
+                right=8,
+                top=9,
+            ),
+        ],
+    )
 
     def field(label, width=150):
         return ft.TextField(
@@ -30,12 +120,17 @@ def create_popup(stack, get_products, on_save):
             label_style=ft.TextStyle(
                 size=12,
                 weight=ft.FontWeight.BOLD,
-                color=FIELD_LABEL,
+                color="#3b2a22",
                 font_family=FONT_BOLD,
             ),
-            text_size=10,
             width=width,
             height=35,
+            color="#3b2a22",
+            text_style=ft.TextStyle(
+                weight=ft.FontWeight.BOLD,
+                size=11,
+            ),
+            content_padding=ft.Padding.symmetric(horizontal=10, vertical=0),
             filled=True,
             bgcolor=CREAM,
             border=ft.OutlineInputBorder(
@@ -49,23 +144,11 @@ def create_popup(stack, get_products, on_save):
         type_label.color = DARK
         type_label.update()
 
-    def pick_status(value):
-        state["status"] = value
-        status_label.value = value
-        status_label.update()
-
     name_field = field("NAME")
     address_field = field("ADDRESS")
     type_menu, type_label = popup_menu("TYPE", ORDER_TYPES, pick_type, width=105)
-    status_menu, status_label = popup_menu(
-        "STATUS",
-        ORDER_STATUSES,
-        pick_status,
-        width=90,
-        height=30,
-        outlined=False,
-        arrow=False,
-    )
+    
+    
     items_column = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO, expand=True)
     error_text = ft.Text("", size=10, color=RED, text_align=ft.TextAlign.CENTER)
 
@@ -155,14 +238,16 @@ def create_popup(stack, get_products, on_save):
             "c_name": name_field.value or "",
             "address": address_field.value or "",
             "order_type": state["type"],
-            "status": state["status"],
             "items": [dict(it) for it in items if it["p_name"]],
+            "total" : 0,
+            "type_date" : datepicker.controls[0].value or str(datetime.now().strftime("%Y-%m-%d")),
+            "type_time" :timepicker.controls[0].value or str(datetime.now().strftime("%I:%M %p"))
         }
 
     def close_popup(e=None):
-        if overlay in stack.controls:
-            stack.controls.remove(overlay)
-            stack.update()
+        if overlay.visible:
+            overlay.visible =False
+            overlay.update()
 
     def save(e):
         data = get_data()
@@ -185,8 +270,8 @@ def create_popup(stack, get_products, on_save):
         type_label.value = state["type"] or "TYPE"
         type_label.color = DARK
 
-        state["status"] = (data.get("status") or "").upper() or None
-        status_label.value = state["status"] or "STATUS"
+        datepicker.controls[0].value = data.get("type_date", "")
+        timepicker.controls[0].value = data.get("type_time", "")
 
         products[:] = get_products()
         items[:] = [
@@ -196,9 +281,9 @@ def create_popup(stack, get_products, on_save):
         render_items(update=False)
         error_text.value = ""
 
-        if overlay not in stack.controls:
-            stack.controls.append(overlay)
-        stack.update()
+        if not overlay.visible:
+            overlay.visible = True
+        overlay.update()
 
     card = ft.Container(
         content=ft.Column(
@@ -229,11 +314,11 @@ def create_popup(stack, get_products, on_save):
                     spacing=4,
                 ),
                 ft.Row(controls=[address_field, type_menu], spacing=4),
+                ft.Row(controls=[datepicker, timepicker], spacing=4),
                 items_column,
                 error_text,
                 ft.Row(
                     controls=[
-                        status_menu,
                         ft.Button(
                             content="DONE",
                             on_click=save,
@@ -269,6 +354,7 @@ def create_popup(stack, get_products, on_save):
 
     overlay = ft.Container(
         blur=10,
+        visible=False,
         bgcolor="#33000000",
         alignment=ft.Alignment.CENTER,
         expand=True,
@@ -283,4 +369,4 @@ def create_popup(stack, get_products, on_save):
         ),
     )
 
-    return open_popup, close_popup
+    return overlay, open_popup, close_popup
