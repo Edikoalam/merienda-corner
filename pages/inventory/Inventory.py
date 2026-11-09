@@ -129,7 +129,7 @@ def build(app):
 
     search_field = ft.TextField(
         hint_text="Search Ingredients...",
-        hint_style=ft.TextStyle(size=8, color="#b9a58f", font_family="Poppins"),
+        hint_style=ft.TextStyle(size=8, color="#3b2a22", font_family="Poppins", weight=ft.FontWeight.BOLD),
         text_size=9,
         text_style=ft.TextStyle(
             weight=ft.FontWeight.BOLD,

@@ -154,7 +154,7 @@ def build(app):
 
     def open_editor(product=None):
         is_new = product is None
-        data = product or {"p_name": "", "price": 0, "units_sold": 0, "img": None}
+        data = product or {"p_name": "", "price": 0, "units_left": 0, "img": None}
         state = {"img": data["img"]}
 
         def field(value, width, hint=""):
