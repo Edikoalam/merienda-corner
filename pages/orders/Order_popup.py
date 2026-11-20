@@ -28,7 +28,8 @@ def create_popup(page, get_products, on_save):
     def pick_date(e):
         def on_change(ev):
             if ev.control.value:
-                datepicker.controls[0].value = ev.control.value.strftime("%Y-%m-%d")
+                local_date = ev.control.value.astimezone()
+                datepicker.controls[0].value = local_date.strftime("%Y-%m-%d") 
                 datepicker.update()
 
         page.show_dialog(
