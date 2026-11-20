@@ -247,7 +247,7 @@ def build(app):
             return (
                 name_f.value.strip() != data["p_name"]
                 or to_int(price_f) != data["price"]
-                or to_int(units_f) != data["units_sold"]
+                or to_int(units_f) != data["units_left"]
                 or state["img"] != data["img"]
             )
 
