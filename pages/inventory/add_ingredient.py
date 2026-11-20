@@ -65,7 +65,8 @@ def create_add_ingredient(page, on_confirm, snack):
     def pick_date(e):
         def on_change(ev):
             if ev.control.value:
-                expiry_field.value = ev.control.value.strftime("%m/%d/%Y")
+                local_date = ev.control.value.astimezone()
+                expiry_field.value = local_date.strftime("%m/%d/%Y")
                 expiry_field.update()
 
         page.show_dialog(
