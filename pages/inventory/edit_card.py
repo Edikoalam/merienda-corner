@@ -471,7 +471,8 @@ def create_edit_card(snack, page, get_inventory, show_rows):
     def pick_date(e):
         def on_change(ev):
             if ev.control.value:
-                expiry_text.value = ev.control.value.strftime("%m/%d/%Y")
+                local_date = ev.control.value.astimezone()
+                expiry_text.value = local_date.strftime("%m/%d/%Y")
                 expiry_text.update()
     
         page.show_dialog(
