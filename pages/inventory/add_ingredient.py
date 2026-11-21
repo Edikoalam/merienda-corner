@@ -65,8 +65,7 @@ def create_add_ingredient(page, on_confirm, snack):
     def pick_date(e):
         def on_change(ev):
             if ev.control.value:
-                local_date = ev.control.value.astimezone()
-                expiry_field.value = local_date.strftime("%m/%d/%Y")
+                expiry_field.value = (ev.control.value + datetime.now().astimezone().utcoffset()).strftime("%m/%d/%Y")
                 expiry_field.update()
 
         page.show_dialog(
@@ -222,8 +221,8 @@ def create_add_ingredient(page, on_confirm, snack):
                 return f"images/{filename}"
             except OSError as ex:
                 print("assets folder not writable, using app storage:", repr(ex))
-            shutil.copyfile(source_path, storage_images_dir() / filename)
-            return filename
+        shutil.copyfile(source_path, storage_images_dir() / filename)
+        return filename
     
     def show_image(value):
         image_box.content = product_image(value, 98, 98)

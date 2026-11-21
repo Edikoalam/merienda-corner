@@ -3,6 +3,7 @@ import flet_charts as fch
 from datetime import datetime
 from db import get_connection, get_menu, order_history, get_specific_history, get_history_by_date_range
 from sorting import insertionSort
+from pages.menu.Menu import product_image
 
 
 BROWN = "#894e3f"
@@ -47,6 +48,8 @@ def build(app):
                 p["percent_sales"] = 0
 
             for order in orders:
+                if (order["status"] or "").upper() != "DONE":
+                    continue
                 for item in order["items"]:
                     for p in products:
                         if item["p_name"] == p["p_name"]:
@@ -67,6 +70,8 @@ def build(app):
                 p["percent_units"] = 0
                 p["percent_sales"] = 0
             for order in orders:
+                if (order["status"] or "").upper() != "DONE":
+                    continue
                 for item in order["items"]:
                     for p in products:
                         if item["p_name"] == p["p_name"]:
@@ -87,6 +92,8 @@ def build(app):
                 p["percent_units"] = 0
                 p["percent_sales"] = 0
             for order in orders:
+                if (order["status"] or "").upper() != "DONE":
+                    continue
                 for item in order["items"]:
                     for p in products:
                         if item["p_name"] == p["p_name"]:
@@ -107,8 +114,8 @@ def build(app):
 
 
     def on_date_picked(e: ft.Event[ft.DatePicker]):
-        start_date = e.control.start_value + datetime.now().astimezone().utcoffset()
-        end_date = e.control.end_value + datetime.now().astimezone().utcoffset()
+        start_date = (e.control.start_value + datetime.now().astimezone().utcoffset())
+        end_date = (e.control.end_value + datetime.now().astimezone().utcoffset())
         start = start_date.strftime("%Y-%m-%d")
         end = end_date.strftime("%Y-%m-%d")
         load_products(None, start, end)
@@ -171,13 +178,7 @@ def build(app):
     def build_best_seller_card():
         img_src = best_seller.get("img") if best_seller else None
         if img_src:
-            picture = ft.Image(
-                src=img_src,
-                width=160,
-                height=90,
-                fit=ft.BoxFit.COVER,
-                border_radius=ft.BorderRadius.all(15),
-            )
+            picture = product_image(img_src, 160, 90, border_radius=ft.BorderRadius.all(15))
         else:
             picture = ft.Container(
                 width=130,

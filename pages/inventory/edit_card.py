@@ -8,18 +8,21 @@ from db import (get_connection,
                 add_batch)
 
 def date_format(date):
-    if date == '':
-        return ''
-    else:
-        date_dt = datetime.strptime(date, "%Y-%m-%d")
-        return str(date_dt.strftime("%m/%d/%Y"))
+    try:
+        return datetime.strptime(date, "%Y-%m-%d").strftime("%m/%d/%Y")
+    except (TypeError, ValueError):
+        return date or ""
 
 def date_db_format(date):
-    if date == '':
-            return ''
-    else:
-        date_dt = datetime.strptime(date, "%m/%d/%Y" )
-        return str(date_dt.strftime("%Y-%m-%d"))
+    try:
+        return datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
+    except (TypeError, ValueError):
+        return ""
+
+def mtext(*args, margin=None, **kwargs):
+    """ft.Text has no margin, so wrap it in a Container when one is wanted."""
+    text = ft.Text(*args, **kwargs)
+    return ft.Container(content=text, margin=margin) if margin else text
 
 def round_button(icon, on_click, filled):
     return ft.Container(
@@ -77,11 +80,14 @@ def create_edit_card(snack, page, get_inventory, show_rows):
         callbacks["on_restock"] = on_restock
         selected_batch = 0
 
-        def update_selected_batch(e, batch):
+        def update_selected_batch(e, idx):
             nonlocal selected_batch
-            selected_batch = batch
-            batches.content.content.controls[0].value = batch
+            selected_batch = idx
+            batches.content.content.controls[0].value = f"BATCH {idx + 1}"
+            added_text.value = date_format(item['batches'][idx]['purchase_date'])
+            expiry_info_text.value = date_format(item['batches'][idx]['expiration_date'])
             batches.content.content.update()
+            batch_info.update()
         
         batches = ft.PopupMenuButton(
             content=ft.Container(
@@ -89,7 +95,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                 content=ft.Row(
                     controls=[
                         ft.Text(
-                            value=f"BATCH {selected_batch}",
+                            value=f"BATCH {selected_batch + 1}",
                             size=11,
                             color="#894e3f",
                             weight=ft.FontWeight.BOLD,
@@ -114,12 +120,15 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             ),
             items=[
                 ft.PopupMenuItem(
-                    content=ft.Text(batch, size= 12),
-                    on_click=lambda e, batch=f"BATCH {batch}" : update_selected_batch(e, batch),
+                    content=ft.Text(f"BATCH {batch + 1}", size=12),
+                    on_click=lambda e, batch=batch: update_selected_batch(e, batch),
                 )
                 for batch in range (len(item["batches"]))
             ],
         )
+
+        added_text = ft.Text(date_format(item['batches'][selected_batch]['purchase_date']), size=9, color="#894e3f", font_family="Poppins-Bold", weight=ft.FontWeight.BOLD)
+        expiry_info_text = ft.Text(date_format(item['batches'][selected_batch]['expiration_date']), size=9, color="#dd433f", font_family="Poppins-Bold", weight=ft.FontWeight.BOLD)
 
         batch_info = ft.Container(
             width=140,
@@ -136,41 +145,28 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                         tight=True,
                         spacing=0,
                         controls= [
-                            ft.Text(
+                            mtext(
                                 "Date added: ",
                                 size=9,
                                 color="#894e3f",
                                 font_family="Poppins",
                                 margin=ft.Margin.only(left=4, top=2),
                             ),
-                            ft.Text(
-                                date_format(item['batches'][selected_batch]['purchase_date']),
-                                size=9,
-                                color="#894e3f",
-                                font_family="Poppins-Bold",
-                                weight=ft.FontWeight.BOLD,
-                                margin=ft.Margin.only(top=2),
-                            )
+                            ft.Container(content=added_text, margin=ft.Margin.only(top=2))
                         ]
                     ),
                     ft.Row(
                         tight=True,
                         spacing=0,
                         controls= [
-                            ft.Text(
+                            mtext(
                                 "Expiry: ",
                                 size=9,
                                 color="#894e3f",
                                 font_family="Poppins",
                                 margin=ft.Margin.only(left=4),
                             ),
-                            ft.Text(
-                                date_format(item['batches'][selected_batch]['expiration_date']),
-                                size=9,
-                                color="#dd433f",
-                                font_family="Poppins-Bold",
-                                weight=ft.FontWeight.BOLD,
-                            )
+                            expiry_info_text
                         ]
                     )
                 ]
@@ -205,8 +201,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             refresh()
 
         def handle_delete(e):
-            item["quantity"] = 1
-            on_consume(item)
+            on_consume(item, True)
 
         def storage_images_dir():
             root = os.getenv("FLET_APP_STORAGE_DATA") or str(
@@ -230,7 +225,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                 fit=ft.BoxFit.COVER, **kwargs,
             )
 
-        placeholder =ft.Icon( ft.Icons.ADD_PHOTO_ALTERNATE, size=26, color="#894e3f"),
+        placeholder = ft.Icon(ft.Icons.ADD_PHOTO_ALTERNATE, size=26, color="#894e3f")
         image_box = ft.Container(
             width=110, height=110,
             border=ft.Border.all(1, "#894e3f"),
@@ -408,7 +403,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             snack("Only add one batch at a time") 
         else:
             expiry_text.value = "Select date"
-            expiry_text.value = None
+            new_batch_quantity.value = ""
             overlay.content.controls.append(new_batch_card(item))
             overlay.visible = True
             overlay.update()
@@ -422,7 +417,6 @@ def create_edit_card(snack, page, get_inventory, show_rows):
         size=10, 
         color="#894e3f", 
         font_family="Poppins",
-        margin=ft.Margin.only(left=4)
         )
 
     expiry_field = ft.Container(
@@ -435,7 +429,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             spacing=0,
             controls=[
-                expiry_text,
+                ft.Container(content=expiry_text, margin=ft.Margin.only(left=4)),
                 ft.Icon(
                     ft.Icons.CALENDAR_MONTH,
                     size=12,
@@ -471,8 +465,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
     def pick_date(e):
         def on_change(ev):
             if ev.control.value:
-                local_date = ev.control.value.astimezone()
-                expiry_text.value = local_date.strftime("%m/%d/%Y")
+                expiry_text.value = (ev.control.value + datetime.now().astimezone().utcoffset()).strftime("%m/%d/%Y")
                 expiry_text.update()
     
         page.show_dialog(
@@ -484,16 +477,23 @@ def create_edit_card(snack, page, get_inventory, show_rows):
         )
 
     def add_batch_db(item):
-        batch = {
-            "expiration_date" : date_db_format(expiry_text.value),
-            "qty" : new_batch_quantity.value
-        }
+        expiration = date_db_format(expiry_text.value)
+        qty_raw = (new_batch_quantity.value or "").strip()
+
+        if not expiration:
+            snack("Pick an expiration date")
+            return
+        if not qty_raw:
+            snack("Enter a quantity")
+            return
 
         conn = get_connection()
-
-        id = add_batch(conn, item["ingredient_id"], batch["expiration_date"], batch["qty"], item["quantity"])
-
+        result = add_batch(conn, item["ingredient_id"], expiration, int(qty_raw), item["quantity"])
         conn.close()
+
+        if isinstance(result, str):
+            snack(result)
+            return
 
         items = get_inventory()
 
@@ -556,8 +556,8 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                             spacing=0,
                             tight=True,
                             controls=[
-                                ft.Text(
-                                    f"BATCH ({len(item["batches"])})",
+                                mtext(
+                                    f"BATCH ({len(item['batches'])})",
                                     text_align=ft.TextAlign.LEFT,
                                     size=11,
                                     font_family="Poppins-Bold",
@@ -574,7 +574,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             spacing=0,
                                             tight=True,
                                             controls=[
-                                                ft.Text(
+                                                mtext(
                                                     "Expiration Date:",
                                                     size=9,
                                                     font_family="Poppins",
@@ -588,7 +588,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                                             spacing=0,
                                             tight=True,
                                             controls=[
-                                                ft.Text(
+                                                mtext(
                                                     "Quantity:",
                                                     size=9,
                                                     font_family="Poppins",

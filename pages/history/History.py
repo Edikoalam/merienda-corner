@@ -23,12 +23,11 @@ FONT_TITLE = "Anton"
 FONT = "Poppins"
 
 
-now = datetime.now()
-future_date = datetime.now() + timedelta(days=15)
-
 def build(app):
     queue = []
-    mode = {"start": now.strftime("%Y-%m-%d"), "end" : future_date.strftime("%Y-%m-%d")}
+    now = datetime.now()
+    month_ago = now - timedelta(days=30)
+    mode = {"start": month_ago.strftime("%Y-%m-%d"), "end": now.strftime("%Y-%m-%d")}
     
 
     def product_names():
@@ -40,7 +39,7 @@ def build(app):
 
     def load_queue(daterange = None, update=True):
         conn = get_connection()
-        if not daterange:
+        if not daterange and mode.get("range") != "date":
             try:
                 queue[:] = order_history(conn)
                                             
@@ -58,7 +57,7 @@ def build(app):
             finally:
                 conn.close()
             orders_column.controls = [
-                order_card(order, i, edit_order, change_status)
+                order_card(order, i, edit_order, change_status, True)
                 for i, order in enumerate(queue)
             ]
         
@@ -79,49 +78,47 @@ def build(app):
 
     def save_order(index, data):
         conn = get_connection()
-        print("save_order:", index, data)
         try:
-            menu = {row["p_name"]: row for row in get_menu(conn)}
-            items = [
-                item
-                for item in data["items"]
-                if item["quantity"] > 0 and item["p_name"] in menu
-            ]
+            menu = get_menu(conn)
+            items = [item for item in data["items"] if item["quantity"] > 0]
             if not items:
                 return "Add at least one product"
-            pairs = [(menu[i["p_name"]]["id"], i["quantity"]) for i in items]
-            total = sum(
-                menu[i["p_name"]]["price"] * i["quantity"] for i in items
-            )
+            total = 0
+            for item in items:
+                for product in menu:
+                    if product["p_name"] == item["p_name"]:
+                        total += product["price"] * item["quantity"]
 
             order = queue[index]
             error = update_order(
-                    conn,
-                    order["id"],
-                    data["c_name"],
-                    data["status"] or order["status"],
-                    data["order_type"],
-                    data["address"],
-                    order["order_time"],
-                    order["order_date"],
-                    total,
-                    pairs,
+                conn,
+                order["id"],
+                data["c_name"],
+                data["order_type"],
+                data["address"],
+                order["order_time"],
+                order["order_date"],
+                data["type_date"],
+                data["type_time"],
+                total,
+                items,
+                menu,
             )
-            print(name for name in order["c_name"] )
             if error:
                 return error
         finally:
             conn.close()
         load_queue()
 
-    overlay, open_popup, close_popup = create_popup(app.stack, product_names, save_order)
+    overlay, open_popup, close_popup = create_popup(app.page, product_names, save_order)
 
     def handle_change(e: ft.Event[ft.DatePicker]):
         print("handled")
-        start_date = e.control.start_value + datetime.now().astimezone().utcoffset()
-        end_date = e.control.end_value + datetime.now().astimezone().utcoffset()
+        start_date = (e.control.start_value + datetime.now().astimezone().utcoffset())
+        end_date = (e.control.end_value + datetime.now().astimezone().utcoffset())
         mode["start"] = start_date.strftime("%Y-%m-%d")
         mode["end"] = end_date.strftime("%Y-%m-%d")                
+        mode["range"] = "date"
         load_queue("date")
     
     orders_column = ft.Column(
@@ -131,10 +128,10 @@ def build(app):
     )
 
     picker = ft.DateRangePicker(
-        start_value=now,
-        end_value=future_date,
+        start_value=month_ago,
+        end_value=now,
         first_date=datetime(year=now.year - 1, month=1, day=1),
-        last_date=datetime(year=now.year + 1, month=now.month, day=20),
+        last_date=datetime(year=now.year + 1, month=12, day=31),
         on_change=lambda e : handle_change(e), 
     )
 

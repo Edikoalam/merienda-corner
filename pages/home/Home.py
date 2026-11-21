@@ -1,6 +1,7 @@
 import flet as ft
 from db import get_connection, get_menu, get_order_count_today, get_order_count_tomorrow,  order_history
 from sorting import insertionSort
+from pages.menu.Menu import product_image
 
 TERRACOTTA = "#C47A62"
 SAND = "#efd7a6"
@@ -34,12 +35,7 @@ def build(app, go):
                 spacing=0,
                 controls=[
                     ft.Container(
-                        content=ft.Image(
-                            src=img, 
-                            width=84, 
-                            height=92, 
-                            fit=ft.BoxFit.COVER
-                        ),
+                        content=product_image(img, 84, 92),
                         border_radius=12,
                         clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                     ),
@@ -128,7 +124,7 @@ def build(app, go):
 
 
     today_count = ft.Text(
-        get_order_count_today(), 
+        str(get_order_count_today()), 
         font_family="Poppins-Bold", 
         size=30, 
         color=WHITE, 
@@ -136,7 +132,7 @@ def build(app, go):
     )
     
     tomorrow_count = ft.Text(
-        get_order_count_tomorrow(), 
+        str(get_order_count_tomorrow()), 
         font_family="Poppins-Bold", 
         size=30, 
         color=WHITE, 
@@ -238,6 +234,8 @@ def build(app, go):
         for p in menu:
             p["units_sold"] = 0
         for order in orders:
+            if (order["status"] or "").upper() != "DONE":
+                continue
             for item in order["items"]:
                 for p in menu:
                     if item["p_name"] == p["p_name"]:
@@ -313,6 +311,10 @@ def build(app, go):
     )
 
     def on_show():
+        today_count.value = str(get_order_count_today())
+        tomorrow_count.value = str(get_order_count_tomorrow())
+        today_count.update()
+        tomorrow_count.update()
         get_new_menu()
         update_best_sellers(menu)
 

@@ -41,9 +41,8 @@ MONTHS = [
     "DEC",
 ]
 
-now = datetime.now()
-
 def build(app):
+    today = datetime.now()
     queue = []
     month = {"active": MONTHS[datetime.now().month - 1]}
     mode = {"range": "active", "date": None}
@@ -63,7 +62,7 @@ def build(app):
                 queue[:] = active_queue(conn)
                 print(item["c_name"] for item in queue)
             elif mode["range"] == "month":
-                queue[:] = get_orders_by_specific_month(conn, MONTHS.index(month["active"])+1)
+                queue[:] = get_orders_by_specific_month(conn, f"{MONTHS.index(month['active']) + 1:02d}")
             elif mode["range"] == "specific":
                 queue[:] = get_orders_by_specific_day(conn, mode["date"])
                 
@@ -108,14 +107,15 @@ def build(app):
                         total += product['price'] * item["quantity"]
 
             if index is None:
+                placed = datetime.now()
                 order_id = new_order(
                     conn,
                     data["c_name"],
                     "PENDING",
                     data["order_type"],
                     data["address"],
-                    now.strftime("%H:%M"),
-                    now.strftime("%Y-%m-%d"),
+                    placed.strftime("%H:%M"),
+                    placed.strftime("%Y-%m-%d"),
                     data["type_date"],
                     data["type_time"]
                 )
@@ -185,7 +185,7 @@ def build(app):
 
     def handle_change(e: ft.Event[ft.DatePicker]):
         print("handled")
-        local_date = e.control.value + datetime.now().astimezone().utcoffset()
+        local_date = (e.control.value + datetime.now().astimezone().utcoffset())
         mode["date"] = local_date.strftime("%Y-%m-%d")
         mode["range"] = "specific"
         load_queue()
@@ -198,9 +198,9 @@ def build(app):
     )
 
     picker = ft.DatePicker(
-        first_date=datetime(year=now.year - 1, month=1, day=1),
-        last_date=datetime(year=now.year + 1, month=now.month, day=20),
-        current_date=now,
+        first_date=datetime(year=today.year - 1, month=1, day=1),
+        last_date=datetime(year=today.year + 1, month=12, day=31),
+        current_date=today,
         on_change=handle_change, 
     )
 
@@ -324,6 +324,9 @@ def build(app):
 
     def on_show():
         mode["range"] = "active"
+        month["active"] = MONTHS[datetime.now().month - 1]
+        months_row.controls = month_buttons()
+        months_row.update()
         load_queue()
         offset = MONTHS.index(month["active"]) * 70
         app.page.run_task(months_row.scroll_to, offset=offset, duration=500)

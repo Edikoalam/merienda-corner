@@ -2,12 +2,12 @@ import flet as ft
 
 def add_confirmation_tabs():
 
-    message = ""
+    message_text = ft.Text("", font_family="Poppins", size=13, color="#894e3f")
     state= {"on_yes" : None}
 
     confirm = ft.Container(
             width=150,
-            bgcolor="#ffffffc5",
+            bgcolor="#c5ffffff",
             border=ft.Border.all(1.5, "#7c994d"),
             border_radius=12,
             padding=ft.Padding.only(left=12, right=12, top=6, bottom=12),
@@ -28,12 +28,7 @@ def add_confirmation_tabs():
                                 size=13,
                                 color = "#894e3f"
                             ),
-                            ft.Text(
-                                message,
-                                font_family="Poppins",
-                                size=13,
-                                color = "#894e3f"
-                            )             
+                            message_text             
                         ]
                     ),
                     ft.Row(
@@ -106,8 +101,7 @@ def add_confirmation_tabs():
         overlay.update()
         
     def delete_confirmation(mess, action):
-        nonlocal message
-        message = mess
+        message_text.value = mess
         state["on_yes"] = action
         overlay.visible = True
         overlay.update()

@@ -127,11 +127,13 @@ def build(app):
         def do_delete(e):
             conn = get_connection()
             try:    
-                delete_menu(conn, p["id"])
+                error = delete_menu(conn, p["id"])
             finally:
                 conn.close()
             app.page.pop_dialog()  
             app.page.pop_dialog()  
+            if error:
+                snack(error)
             refresh()
 
         confirm_dialog(
@@ -264,11 +266,15 @@ def build(app):
             }
             conn = get_connection()
             if is_new:
-                add_menu(conn, values["name"], values["price"], values["img"], values["units"])
+                error = add_menu(conn, values["name"], values["price"], values["img"], values["units"])
                 conn.close()
             else:
-                update_menu(conn, data["id"], values["name"], values["price"], values["img"], values["units"])
+                error = update_menu(conn, data["id"], values["name"], values["price"], values["img"], values["units"])
                 conn.close()
+            if error:
+                name_f.error_text = error
+                name_f.update()
+                return
             app.page.pop_dialog()
             refresh()
 

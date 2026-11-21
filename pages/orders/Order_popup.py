@@ -28,8 +28,7 @@ def create_popup(page, get_products, on_save):
     def pick_date(e):
         def on_change(ev):
             if ev.control.value:
-                local_date = ev.control.value.astimezone()
-                datepicker.controls[0].value = local_date.strftime("%Y-%m-%d") 
+                datepicker.controls[0].value = (ev.control.value + datetime.now().astimezone().utcoffset()).strftime("%Y-%m-%d")
                 datepicker.update()
 
         page.show_dialog(
@@ -363,7 +362,8 @@ def create_popup(page, get_products, on_save):
             alignment=ft.Alignment.CENTER,
             controls=[
                 ft.Container(
-                    on_click=close_popup
+                    on_click=close_popup,
+                    left=0, right=0, top=0, bottom=0,
                 ),
                 card,
             ],

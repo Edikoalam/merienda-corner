@@ -42,11 +42,8 @@ def build(app):
     inventory = []
 
     def get_latest_expiry(batch):
-            latest = batch[0]["expiration_date"]
-            for i in range(len(batch)-1):
-                if batch[i]["expiration_date"] > batch[i+1]["expiration_date"]:
-                    latest= batch[i+1]["expiration_date"]
-            return latest
+            dates = [b["expiration_date"] for b in batch if b["expiration_date"] and b["expiration_date"] != "--"]
+            return min(dates) if dates else "--"
 
     def get_inventory():
         conn = get_connection()
@@ -77,11 +74,11 @@ def build(app):
 
     confirm_overlay, delete_confirmation = add_confirmation_tabs()
 
-    def consume(item):
+    def consume(item, force_delete=False):
         print("consume")
-        if item["quantity"] <= 0:
+        if item["quantity"] <= 0 and not force_delete:
             return
-        if item["quantity"] == 1:
+        if item["quantity"] == 1 or force_delete:
             delete_confirmation(
                 "delete this ingredient?",
                 lambda: remove_ingredient(item),
@@ -98,7 +95,8 @@ def build(app):
         finally:
             con.close()
         close_edit_card()
-        get_inventory()
+        if item in inventory:
+            inventory.remove(item)
         show_rows()
 
     def restock(item):
@@ -114,9 +112,11 @@ def build(app):
         con = get_connection()
         name, unit, quantity, expiry, img = item["name"], item["unit"], item["quantity"], item["expiration_date"], item["img"]
         try:
-            add_ingredient(con, name, unit, quantity, expiry, img)
+            result = add_ingredient(con, name, unit, quantity, expiry, img)
         finally:
             con.close()
+        if isinstance(result, str):
+            snack(result)
         get_inventory()
         show_rows()
 

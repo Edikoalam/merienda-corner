@@ -38,7 +38,7 @@ def init_db(conn):
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             c_name TEXT NOT NULL,
-            status TEXT DEFAULT 'pending',
+            status TEXT DEFAULT 'PENDING',
             order_type TEXT NOT NULL,
             address TEXT NOT NULL,
             order_time TEXT NOT NULL,
@@ -108,9 +108,9 @@ def update_menu(conn, menu_id, p_name, price, img, units):
 
         same=0
         for row in get_menu(conn):
-            if row['p_name'] == p_name:
+            if row['p_name'] == p_name and row['id'] != menu_id:
                 same += 1
-        if same > 1:
+        if same > 0:
             return "Menu item already exists."
         else:
             cursor.execute('''
@@ -127,6 +127,9 @@ def update_menu(conn, menu_id, p_name, price, img, units):
 def delete_menu(conn, menu_id):
     cursor = conn.cursor()
     try:
+        used = cursor.execute("SELECT COUNT(*) FROM order_items WHERE menu_id = ?", (menu_id,)).fetchone()[0]
+        if used:
+            return "Can't delete: this product is in existing orders."
         cursor.execute('''
             DELETE FROM menu
             WHERE id = ?
@@ -145,7 +148,7 @@ def new_order(conn, c_name, status, order_type, address, order_time, order_date,
     cursor = conn.cursor()
 
     try:
-        if not c_name or not status or not order_type or not address or not order_time or not order_date:
+        if not c_name or not status or not order_type or not order_time or not order_date:
             return "Complete the required values"
         
         cursor.execute('''
@@ -216,18 +219,25 @@ def insert_total(conn, order_id, total):
 
 def update_order(conn, order_id, c_name, order_type, address, order_time, order_date,type_date, type_time, total, items, menu):
     c = conn.cursor()
-    try:        
+    try:
+        if not c_name  or not order_type or not order_time or not order_date or total is None:
+            return "Complete the required values"
+
+        # give back the stock held by the previous version of this order,
+        # otherwise every edit deducts the same items again
+        c.execute("SELECT menu_id, quantity FROM order_items WHERE order_id = ?", (order_id,))
+        for old in c.fetchall():
+            for m in menu:
+                if m["id"] == old["menu_id"] and m["units_left"] != 0:
+                    m["units_left"] += old["quantity"]
+
         for item in items:
             for m in menu:
                 if item["p_name"] == m["p_name"]:
-                    item["menu_id"] = m["id"] 
+                    item["menu_id"] = m["id"]
                     if m["units_left"] != 0:
                         m["units_left"] -= item["quantity"]
-        
-        if not c_name  or not order_type or not address or not order_time or not order_date or total is None:
-            return "Complete the required values"
-        
-        
+
         c.execute('''
             UPDATE orders
             SET c_name = ?, order_type = ?, address = ?, order_time = ?, order_date = ?, total = ?, type_date = ?, type_time = ?
@@ -294,7 +304,7 @@ def order_history(conn):
         c.execute('''
             SELECT *
             FROM orders
-            WHERE status != 'PENDING'
+            WHERE UPPER(status) != 'PENDING'
         ''',)
 
         rows = c.fetchall()
@@ -319,6 +329,13 @@ def order_history(conn):
 
 def update_status(conn, order_id, status):
     try:
+        old = conn.execute("SELECT status FROM orders WHERE id = ?", (order_id,)).fetchone()
+        was_cancelled = bool(old) and (old["status"] or "").upper() == "CANCELLED"
+        now_cancelled = (status or "").upper() == "CANCELLED"
+        if was_cancelled != now_cancelled:
+            sign = 1 if now_cancelled else -1
+            for r in conn.execute("SELECT menu_id, quantity FROM order_items WHERE order_id = ?", (order_id,)).fetchall():
+                conn.execute("UPDATE menu SET units_left = units_left + ? WHERE id = ? AND units_left != 0", (sign * r["quantity"], r["menu_id"]))
         conn.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
         conn.commit()
     except sqlite3.Error as e:
@@ -331,7 +348,7 @@ def get_order_count_today():
     try:
         cursor = conn.cursor()
         # FIXED: Added * inside COUNT(*)
-        cursor.execute("SELECT COUNT(*) FROM orders WHERE order_date = ?", (today_str,))
+        cursor.execute("SELECT COUNT(*) FROM orders WHERE type_date = ? AND (status = 'PENDING' OR status = 'pending')", (today_str,))
         count = cursor.fetchone()[0]
         return count
     except sqlite3.Error as e:
@@ -345,7 +362,7 @@ def get_order_count_tomorrow():
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM orders WHERE order_date = ?", (tomorrow_str,))
+        cursor.execute("SELECT COUNT(*) FROM orders WHERE type_date = ? AND (status = 'PENDING' OR status = 'pending')", (tomorrow_str,))
         count = cursor.fetchone()[0]
         return count
     except sqlite3.Error as e:
@@ -389,7 +406,7 @@ def get_orders_by_specific_day(conn, target_day: str):
         cursor.execute("""SELECT * 
                         FROM orders 
                         WHERE type_date = ?
-                        AND status = 'PENDING' OR status = 'pending' 
+                        AND (status = 'PENDING' OR status = 'pending') 
                         ORDER BY order_time ASC""", (target_day,))
         rows = cursor.fetchall()
         
@@ -418,9 +435,9 @@ def get_history_by_date_range(conn, start_date, end_date: str):
     print(start_date,end_date)
     try:
         cursor = conn.cursor()
-        cursor.execute("""SELECT id, c_name, status, order_type, address, order_time, order_date, total 
+        cursor.execute("""SELECT id, c_name, status, order_type, address, order_time, order_date, type_date, type_time, total 
                         FROM orders 
-                        WHERE status != 'PENDING' AND order_date BETWEEN ? AND ?
+                        WHERE UPPER(status) != 'PENDING' AND type_date BETWEEN ? AND ?
                         ORDER BY order_time ASC""", (start_date,end_date),)
         rows = cursor.fetchall()
         
@@ -450,7 +467,7 @@ def get_orders_by_specific_month(conn, year_month: str):
         cursor.execute("""
         SELECT * FROM orders 
         WHERE type_date LIKE ? 
-        AND status = 'PENDING' OR status = 'pending' 
+        AND (status = 'PENDING' OR status = 'pending') 
         ORDER BY order_date ASC""", (f"%-{year_month}-%",))
         rows = cursor.fetchall()
 
@@ -481,7 +498,7 @@ def get_specific_history(conn, year_month: str):
     try:
         cursor.execute("""
         SELECT * FROM orders 
-        WHERE order_date LIKE ? AND status != 'PENDING'
+        WHERE type_date LIKE ? AND UPPER(status) != 'PENDING'
         """, (f"{year_month}-%",))
         rows = cursor.fetchall()
 
@@ -508,7 +525,7 @@ def get_order_items_by_order_id(order_id: int):
     try:
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT oi.qty, m.p_name, m.price
+            SELECT oi.quantity, m.p_name, m.price
             FROM order_items oi
             JOIN menu m ON oi.menu_id = m.id
             WHERE oi.order_id = ?
@@ -540,7 +557,6 @@ def get_inventory_list(conn):
         )
         batches = c.fetchall()
         item["batches"] = [dict(b) for b in batches]
-    conn.close()
     return inventory_list
   except sqlite3.Error as e:
     print(f"Failed to retrieve inventory list: {e}")
@@ -590,8 +606,6 @@ def add_ingredient(conn, name, unit, quantity, expiry, img):
         print("added batch")
         
 
-        conn.close()
-
         return ingredient_id
     
     except sqlite3.Error as e:
@@ -626,7 +640,6 @@ def add_batch(conn, ingredient_id, expiration_date, quantity, current_qty):
 
         conn.commit()
         batch_id = cursor.lastrowid
-        conn.close()
         return batch_id
     except sqlite3.Error as e:
         conn.rollback()
@@ -640,7 +653,7 @@ def delete_batch(conn, batch_id):
         c.execute(
             """
                 DELETE FROM batches
-                WHERE batch_id = ?
+                WHERE id = ?
             """,
             (batch_id,)
         )
