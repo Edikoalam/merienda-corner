@@ -63,7 +63,7 @@ def build(app, go):
         padding=ft.Padding.only(top=12),
         border_radius=ft.BorderRadius.only(bottom_left=30, bottom_right=30),
         content=ft.Text(
-            "Baked with love, baking for love",    
+            "Cooked with love, cooking for love",    
             text_align=ft.TextAlign.CENTER,
             style = ft.TextStyle(
                 font_family="Handelson",
