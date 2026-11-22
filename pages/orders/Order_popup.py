@@ -185,8 +185,11 @@ def create_popup(page, get_products, on_save):
                 value=str(item["quantity"]),
                 width=38,
                 height=26,
-                text_size=11,
                 text_align=ft.TextAlign.CENTER,
+                text_style=ft.TextStyle(
+                    weight=ft.FontWeight.BOLD,
+                    size=11,
+                ),
                 content_padding=ft.Padding.all(0),
                 keyboard_type=ft.KeyboardType.NUMBER,
                 input_filter=ft.NumbersOnlyInputFilter(),
@@ -322,7 +325,7 @@ def create_popup(page, get_products, on_save):
                         ft.Button(
                             content="DONE",
                             on_click=save,
-                            width=85,
+                            width=90,
                             height=30,
                             style=ft.ButtonStyle(
                                 bgcolor=GREEN,
@@ -335,6 +338,22 @@ def create_popup(page, get_products, on_save):
                                 ),
                             ),
                         ),
+                         ft.Button(
+                                content="Cancel",
+                                on_click=lambda e : close_popup(),
+                                width=95,
+                                height=30,
+                                style=ft.ButtonStyle(
+                                    bgcolor="red",
+                                    color=BG,
+                                    shape=ft.RoundedRectangleBorder(radius=8),
+                                    text_style=ft.TextStyle(
+                                        font_family=FONT_BOLD,
+                                        size=12,
+                                        weight=ft.FontWeight.BOLD,
+                                    ),
+                                ),
+                            ),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
