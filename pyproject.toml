@@ -13,6 +13,7 @@ product = "Marinel's Sari-Sari Merienda Corner"
 org = "com.marinel"
 company = "Marinel"
 copyright = "Copyright (c) 2026 Marinel"
+android.adaptive_icon_background = "#fff8e5"
 
 [tool.flet.app]
 path = "."
