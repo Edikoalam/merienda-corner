@@ -189,6 +189,7 @@ def create_popup(page, get_products, on_save):
                 text_style=ft.TextStyle(
                     weight=ft.FontWeight.BOLD,
                     size=11,
+                    color=DARK
                 ),
                 content_padding=ft.Padding.all(0),
                 keyboard_type=ft.KeyboardType.NUMBER,

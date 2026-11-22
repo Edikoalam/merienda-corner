@@ -13,9 +13,9 @@ def get_connection():
         db_path = Path(app_data_path) / "project.db"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         if not db_path.exists() and BUNDLED_DB.exists():
-            shutil.copy(BUNDLED_DB, db_path)   # first launch: seed with your data
+            shutil.copy(BUNDLED_DB, db_path)   
     else:
-        db_path = BUNDLED_DB                   # running locally in VS Code
+        db_path = BUNDLED_DB                  
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
