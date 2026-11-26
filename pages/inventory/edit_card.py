@@ -70,7 +70,9 @@ def create_edit_card(snack, page, get_inventory, show_rows):
 
     def open_edit_card(item, on_consume,on_restock, e=None):
         print("open")
-        overlay.content.controls.append(card(item, on_consume, on_restock))
+        edit_card = card(item, on_consume, on_restock)
+        edit_card.width = min(330, page.width - 24)
+        overlay.content.controls.append(edit_card)
         overlay.visible = True
         overlay.update()
 

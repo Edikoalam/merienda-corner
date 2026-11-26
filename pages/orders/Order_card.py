@@ -220,5 +220,4 @@ def order_card(order, index, on_edit, on_status, history=False):
             ],
             spacing=0,
         ),
-        width=340,
     )

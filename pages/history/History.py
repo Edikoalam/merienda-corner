@@ -122,9 +122,10 @@ def build(app):
         load_queue("date")
     
     orders_column = ft.Column(
+        expand=True,
         spacing=5,
         scroll=ft.ScrollMode.AUTO,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
     )
 
     picker = ft.DateRangePicker(
@@ -200,10 +201,10 @@ def build(app):
                         ),
                     ),
                     ft.Container(
-                        alignment=ft.Alignment.TOP_CENTER,
                         content=orders_column,
                         expand=True,
                         bgcolor=BG,
+                        padding=10,
                     ),
                 ],
             ),

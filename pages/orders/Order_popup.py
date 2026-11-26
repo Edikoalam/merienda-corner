@@ -285,6 +285,8 @@ def create_popup(page, get_products, on_save):
         render_items(update=False)
         error_text.value = ""
 
+        card.width = min(320, page.width - 24)
+        card.height = min(500, page.height * 0.75)
         if not overlay.visible:
             overlay.visible = True
         overlay.update()
@@ -366,7 +368,7 @@ def create_popup(page, get_products, on_save):
         ),
         bgcolor=CREAM,
         border_radius=16,
-        width=280,
+        width=320,
         height=500,
         padding=ft.Padding.all(10),
         border=ft.Border.all(1, GREEN),

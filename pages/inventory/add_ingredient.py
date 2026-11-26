@@ -132,6 +132,7 @@ def create_add_ingredient(page, on_confirm, snack):
         expiry_field.value = ""
         unit_text.value = "KG"
         name_box.border = ft.Border.all(1, LIGHT_BROWN)
+        card.width = min(330, page.width - 24)
         overlay.visible = True
         overlay.update()
 

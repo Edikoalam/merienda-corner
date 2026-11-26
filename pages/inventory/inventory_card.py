@@ -24,9 +24,10 @@ def round_button(icon, on_click, filled):
     )
 
 
-def header_cell(text, width, alignment=ft.Alignment.CENTER_LEFT, left=0):
+def header_cell(text, width=None, alignment=ft.Alignment.CENTER_LEFT, left=0, expand=False):
     return ft.Container(
         width=width,
+        expand=expand,
         alignment=alignment,
         padding=ft.Padding.only(left=left),
         content=ft.Text(
@@ -46,7 +47,7 @@ def inventory_header():
         content=ft.Row(
             spacing=0,
             controls=[
-                header_cell("INGREDIENTS", 147),
+                header_cell("INGREDIENTS", expand=True),
                 header_cell("QTY.", 32),
                 header_cell("LEFT", 55),
                 header_cell("EXP. DATE", 65, ft.Alignment.CENTER),
@@ -70,7 +71,7 @@ def inventory_card(item, on_consume, on_restock, open_card):
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
                 ft.Container(
-                    width=130,
+                    expand=True,
                     content=ft.Text(
                         item["name"] + " " + item["unit"],
                         size=9,
