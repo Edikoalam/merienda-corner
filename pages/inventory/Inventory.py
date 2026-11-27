@@ -10,19 +10,12 @@ from db import (get_connection,
                 delete_ingredient, 
                 add_ingredient)
 
-BROWN = "#894e3f"
-LIGHT_BROWN = "#c37960"
-CREAM = "#fff8e5"
-TEXT_DARK = "#4a4d52"
-
-TITLE_FONT = "Anton"
-
 
 def pill_button(text, width, on_click):
     return ft.Container(
         width=width,
         height=50,
-        bgcolor=LIGHT_BROWN,
+        bgcolor="#c37960",
         border_radius=8,
         alignment=ft.Alignment.CENTER,
         shadow=ft.BoxShadow(blur_radius=2, color=ft.Colors.BLACK_45),
@@ -30,7 +23,7 @@ def pill_button(text, width, on_click):
         ink=True,
         content=ft.Text(
             text,
-            color=CREAM,
+            color="#fff8e5",
             size=10,
             font_family="Poppins-Bold",
             weight=ft.FontWeight.BOLD,
@@ -56,7 +49,7 @@ def build(app):
         return inventory
 
     def snack(message):
-        app.page.show_dialog(ft.SnackBar(ft.Text(message), bgcolor=BROWN))
+        app.page.show_dialog(ft.SnackBar(ft.Text(message), bgcolor="#894e3f"))
 
     rows_column = ft.Column(spacing=2, scroll=ft.ScrollMode.AUTO, expand=True)
 
@@ -156,7 +149,7 @@ def build(app):
             spacing=4,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                ft.Icon(ft.Icons.SEARCH, size=10, color=TEXT_DARK),
+                ft.Icon(ft.Icons.SEARCH, size=10, color="#4a4d52"),
                 search_field,
             ],
         ),
@@ -172,16 +165,16 @@ def build(app):
                     size=18,
                     font_family="Poppins-Bold",
                     weight=ft.FontWeight.BOLD,
-                    color=BROWN,
+                    color="#894e3f",
                     top=0,
                     left=0,
                 ),
                 ft.Text(
                     "INVENTORY",
                     size=56,
-                    font_family=TITLE_FONT,
+                    font_family="Anton",
                     weight=ft.FontWeight.BOLD,
-                    color=BROWN,
+                    color="#894e3f",
                     style=ft.TextStyle(height=1.0),
                     top=17,
                     left=0,
@@ -192,7 +185,7 @@ def build(app):
                     content=ft.Text(
                         "Manage inventory and consumption.",
                         size=10,
-                        color=BROWN,
+                        color="#894e3f",
                         font_family="Poppins",
                     ),
                 ),

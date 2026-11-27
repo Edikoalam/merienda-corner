@@ -1,24 +1,15 @@
 import flet as ft
 
-BROWN = "#894e3f"
-LIGHT_BROWN = "#c37960"
-CREAM = "#fff8e5"
-ROW_BG = "#fdeccb"
-TEXT_DARK = "#4a4d52"
-TAN = "#c9b57a"
-
-W_NAME, W_QTY, W_LEFT, W_DATE, W_EXP, W_MENU = 100, 29, 42, 58, 75, 28
-
 
 def round_button(icon, on_click, filled):
     return ft.Container(
         width=11,
         height=11,
         border_radius=6,
-        bgcolor="#e0b84a" if filled else CREAM,
-        border=None if filled else ft.Border.all(1, TAN),
+        bgcolor="#e0b84a" if filled else "#fff8e5",
+        border=None if filled else ft.Border.all(1, "#c9b57a"),
         alignment=ft.Alignment.CENTER,
-        content=ft.Icon(icon, size=8, color=CREAM if filled else TAN),
+        content=ft.Icon(icon, size=8, color="#fff8e5" if filled else "#c9b57a"),
         on_click=on_click,
         ink=True,
     )
@@ -32,7 +23,7 @@ def header_cell(text, width, alignment=ft.Alignment.CENTER_LEFT, left=0):
         content=ft.Text(
             text,
             size=9,
-            color=LIGHT_BROWN,
+            color="#c37960",
             weight=ft.FontWeight.BOLD,
             font_family="Poppins-Bold",
         ),
@@ -57,7 +48,7 @@ def inventory_header():
 
 def inventory_card(item, on_consume, on_restock, open_card):
     return ft.Container(
-        bgcolor=ROW_BG,
+        bgcolor="#fdeccb",
         border_radius=3,
         height=24,
         padding=ft.Padding.symmetric(horizontal=4),
@@ -73,7 +64,7 @@ def inventory_card(item, on_consume, on_restock, open_card):
                     content=ft.Text(
                         item["name"] + " " + item["unit"],
                         size=9,
-                        color=BROWN,
+                        color="#894e3f",
                         weight=ft.FontWeight.BOLD,
                         font_family="Poppins-Bold",
                         overflow=ft.TextOverflow.ELLIPSIS,
@@ -102,7 +93,7 @@ def inventory_card(item, on_consume, on_restock, open_card):
                                 content=ft.Text(
                                     str(item["quantity"]),
                                     size=10,
-                                    color=BROWN,
+                                    color="#894e3f",
                                     weight=ft.FontWeight.BOLD,
                                     font_family="Poppins-Bold",
                                 ),

@@ -2,13 +2,6 @@ from datetime import datetime
 
 import flet as ft
 
-BG = "#fff8e5"
-BROWN = "#894e3f"
-OLIVE = "#7c994d"
-TEXT = "#4A3525"
-TEXT_SOFT = "#8B5A2B"
-GREY = "#4a4d52"
-FONT_BOLD = "Poppins-Bold"
 
 ORDER_STATUSES = ["PENDING", "DONE", "CANCELLED"]
 
@@ -52,11 +45,11 @@ def order_card(order, index, on_edit, on_status, history=False):
                     ft.Text(
                         value=status,
                         size=14,
-                        color=STATUS_COLORS.get(status, GREY),
+                        color=STATUS_COLORS.get(status, "#4a4d52"),
                         weight=ft.FontWeight.BOLD,
-                        font_family=FONT_BOLD,
+                        font_family="Poppins-Bold",
                     ),
-                    ft.Icon(ft.Icons.ARROW_DROP_DOWN, size=23, color=GREY),
+                    ft.Icon(ft.Icons.ARROW_DROP_DOWN, size=23, color="#4a4d52"),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 spacing=2,
@@ -83,9 +76,9 @@ def order_card(order, index, on_edit, on_status, history=False):
                 ft.Text(
                     f"ORDER {order['id']:03d}",
                     weight=ft.FontWeight.BOLD,
-                    font_family=FONT_BOLD,
+                    font_family="Poppins-Bold",
                     size=22,
-                    color=BG,
+                    color="#fff8e5",
                 ),
                 ft.Row(
                     controls=[
@@ -102,18 +95,18 @@ def order_card(order, index, on_edit, on_status, history=False):
                 ft.Text(
                     f"ORDER {order['id']:03d}",
                     weight=ft.FontWeight.BOLD,
-                    font_family=FONT_BOLD,
+                    font_family="Poppins-Bold",
                     size=22,
-                    color=BG,
+                    color="#fff8e5",
                 ),
                 ft.Row(
                     controls=[
                         ft.Container(
                             content=ft.Text(
                                 "EDIT",
-                                color=GREY,
+                                color="#4a4d52",
                                 weight=ft.FontWeight.BOLD,
-                                font_family=FONT_BOLD,
+                                font_family="Poppins-Bold",
                                 size=15,
                             ),
                             alignment=ft.Alignment.CENTER,
@@ -139,13 +132,13 @@ def order_card(order, index, on_edit, on_status, history=False):
             controls=[
                 ft.Text(
                     item["p_name"],
-                    color=BROWN,
+                    color="#894e3f",
                     size=15,
                     weight=ft.FontWeight.W_500,
                 ),
                 ft.Text(
                     str(item["quantity"]),
-                    color=BROWN,
+                    color="#894e3f",
                     size=15,
                     weight=ft.FontWeight.BOLD,
                 ),
@@ -161,15 +154,15 @@ def order_card(order, index, on_edit, on_status, history=False):
                 order["c_name"],
                 weight=ft.FontWeight.BOLD,
                 size=20,
-                color=TEXT,
+                color="#4A3525",
             ),
             ft.Column(controls=product_rows, spacing=0),
-            ft.Text(order["address"], color=TEXT, size=14),
+            ft.Text(order["address"], color="#4A3525", size=14),
             
             ft.Row(
                 controls=[
-                    ft.Text(fmt_date(order["type_date"]), color=TEXT_SOFT, size=13),
-                    ft.Text(order["type_time"], color=TEXT_SOFT, size=13),
+                    ft.Text(fmt_date(order["type_date"]), color="#8B5A2B", size=13),
+                    ft.Text(order["type_time"], color="#8B5A2B", size=13),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
@@ -179,11 +172,11 @@ def order_card(order, index, on_edit, on_status, history=False):
                         str(order["total"] or 0),
                         weight=ft.FontWeight.BOLD,
                         size=15,
-                        color=TEXT_SOFT,
+                        color="#8B5A2B",
                     ),
                     ft.Text(
                         (order["order_type"] or "").upper(),
-                        color=TEXT_SOFT,
+                        color="#8B5A2B",
                         size=13,
                         italic=True,
                     ),
@@ -199,7 +192,7 @@ def order_card(order, index, on_edit, on_status, history=False):
             controls=[
                 ft.Container(
                     content=header,
-                    bgcolor=OLIVE,
+                    bgcolor="#7c994d",
                     padding=ft.Padding.symmetric(horizontal=12, vertical=7),
                     border_radius=0,
                 ),
@@ -212,9 +205,9 @@ def order_card(order, index, on_edit, on_status, history=False):
                         bottom_left=10, bottom_right=10
                     ),
                     border=ft.Border.only(
-                        left=ft.BorderSide(2, OLIVE),
-                        right=ft.BorderSide(2, OLIVE),
-                        bottom=ft.BorderSide(2, OLIVE),
+                        left=ft.BorderSide(2, "#7c994d"),
+                        right=ft.BorderSide(2, "#7c994d"),
+                        bottom=ft.BorderSide(2, "#7c994d"),
                     ),
                 ),
             ],

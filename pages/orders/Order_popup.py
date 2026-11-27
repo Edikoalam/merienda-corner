@@ -3,18 +3,6 @@ from datetime import datetime
 
 from pages.orders.Popup_menu import popup_menu
 
-BG = "#fff8e5"
-CREAM = "#f4ead6"
-CREAM_LIGHT = "#fffaf0"
-DARK = "#3b2a22"
-FIELD_LABEL = "#5f5f5f"
-GREEN = "#3a7f2c"
-RED = "#c0392b"
-ADD_BUTTON = "#b0887e"
-ADD_BUTTON_HOVER = "#95736a"
-
-FONT = "Poppins"
-FONT_BOLD = "Poppins-Bold"
 
 ORDER_TYPES = ["DELIVERY", "PICKUP"]
 ORDER_STATUSES = ["PENDING", "DONE", "CANCELLED"]
@@ -49,7 +37,7 @@ def create_popup(page, get_products, on_save):
                     size=12,
                     weight=ft.FontWeight.BOLD,
                     color="#3b2a22",
-                    font_family=FONT_BOLD,
+                    font_family="Poppins-Bold",
                 ),
                 width=150,
                 height=35,
@@ -57,7 +45,7 @@ def create_popup(page, get_products, on_save):
                 text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, size=11),
                 content_padding=ft.Padding.only(left=10, right=30),
                 filled=True,
-                bgcolor=CREAM,
+                bgcolor="#f4ead6",
                 read_only=True,
                 border=ft.OutlineInputBorder(side=ft.BorderSide(color=ft.Colors.WHITE)),
             ),
@@ -93,7 +81,7 @@ def create_popup(page, get_products, on_save):
                     size=12,
                     weight=ft.FontWeight.BOLD,
                     color="#3b2a22",
-                    font_family=FONT_BOLD,
+                    font_family="Poppins-Bold",
                 ),
                 width=105,
                 height=35,
@@ -101,7 +89,7 @@ def create_popup(page, get_products, on_save):
                 text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, size=11),
                 content_padding=ft.Padding.only(left=10, right=30),
                 filled=True,
-                bgcolor=CREAM,
+                bgcolor="#f4ead6",
                 read_only=True,
                 border=ft.OutlineInputBorder(side=ft.BorderSide(color=ft.Colors.WHITE)),
             ),
@@ -121,7 +109,7 @@ def create_popup(page, get_products, on_save):
                 size=12,
                 weight=ft.FontWeight.BOLD,
                 color="#3b2a22",
-                font_family=FONT_BOLD,
+                font_family="Poppins-Bold",
             ),
             width=width,
             height=35,
@@ -132,7 +120,7 @@ def create_popup(page, get_products, on_save):
             ),
             content_padding=ft.Padding.symmetric(horizontal=10, vertical=0),
             filled=True,
-            bgcolor=CREAM,
+            bgcolor="#f4ead6",
             border=ft.OutlineInputBorder(
                 side=ft.BorderSide(color=ft.Colors.WHITE),
             ),
@@ -141,7 +129,7 @@ def create_popup(page, get_products, on_save):
     def pick_type(value):
         state["type"] = value
         type_label.value = value
-        type_label.color = DARK
+        type_label.color = "#3b2a22"
         type_label.update()
 
     name_field = field("NAME")
@@ -150,7 +138,7 @@ def create_popup(page, get_products, on_save):
     
     
     items_column = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO, expand=True)
-    error_text = ft.Text("", size=10, color=RED, text_align=ft.TextAlign.CENTER)
+    error_text = ft.Text("", size=10, color="#c0392b", text_align=ft.TextAlign.CENTER)
 
     def render_items(update=True):
         def pick_product(i, name):
@@ -176,7 +164,7 @@ def create_popup(page, get_products, on_save):
                 width=125,
                 extra_items=[
                     ft.PopupMenuItem(
-                        content=ft.Text("REMOVE", size=12, color=RED),
+                        content=ft.Text("REMOVE", size=12, color="#c0392b"),
                         on_click=lambda e, i=i: remove_item(i),
                     )
                 ],
@@ -191,10 +179,10 @@ def create_popup(page, get_products, on_save):
                 keyboard_type=ft.KeyboardType.NUMBER,
                 input_filter=ft.NumbersOnlyInputFilter(),
                 filled=True,
-                bgcolor=CREAM_LIGHT,
+                bgcolor="#fffaf0",
                 border=ft.OutlineInputBorder(
                     border_radius=8,
-                    side=ft.BorderSide(1, DARK),
+                    side=ft.BorderSide(1, "#3b2a22"),
                 ),
                 on_change=lambda e, i=i: set_qty(i, e.control.value),
             )
@@ -209,7 +197,7 @@ def create_popup(page, get_products, on_save):
                                         "QUANTITY:",
                                         size=10,
                                         weight=ft.FontWeight.BOLD,
-                                        color=DARK,
+                                        color="#3b2a22",
                                     ),
                                     qty,
                                 ],
@@ -219,9 +207,9 @@ def create_popup(page, get_products, on_save):
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
-                    border=ft.Border.all(1, DARK),
+                    border=ft.Border.all(1, "#3b2a22"),
                     border_radius=10,
-                    bgcolor=CREAM_LIGHT,
+                    bgcolor="#fffaf0",
                     padding=ft.Padding.symmetric(horizontal=6, vertical=4),
                 )
             )
@@ -270,7 +258,7 @@ def create_popup(page, get_products, on_save):
 
         state["type"] = (data.get("order_type") or "").upper() or None
         type_label.value = state["type"] or "TYPE"
-        type_label.color = DARK
+        type_label.color = "#3b2a22"
 
         datepicker.controls[0].value = data.get("type_date", "")
         timepicker.controls[0].value = data.get("type_time", "")
@@ -297,15 +285,15 @@ def create_popup(page, get_products, on_save):
                             content="ADD PRODUCT",
                             on_click=add_product,
                             style=ft.ButtonStyle(
-                                color=BG,
+                                color="#fff8e5",
                                 shape=ft.RoundedRectangleBorder(radius=10),
                                 side=ft.BorderSide(width=1, color=ft.Colors.WHITE),
                                 bgcolor={
-                                    ft.ControlState.DEFAULT: ADD_BUTTON,
-                                    ft.ControlState.HOVERED: ADD_BUTTON_HOVER,
+                                    ft.ControlState.DEFAULT: "#b0887e",
+                                    ft.ControlState.HOVERED: "#95736a",
                                 },
                                 text_style=ft.TextStyle(
-                                    font_family=FONT,
+                                    font_family="Poppins",
                                     size=11,
                                     weight=ft.FontWeight.BOLD,
                                 ),
@@ -327,11 +315,11 @@ def create_popup(page, get_products, on_save):
                             width=85,
                             height=30,
                             style=ft.ButtonStyle(
-                                bgcolor=GREEN,
-                                color=BG,
+                                bgcolor="#3a7f2c",
+                                color="#fff8e5",
                                 shape=ft.RoundedRectangleBorder(radius=8),
                                 text_style=ft.TextStyle(
-                                    font_family=FONT_BOLD,
+                                    font_family="Poppins-Bold",
                                     size=12,
                                     weight=ft.FontWeight.BOLD,
                                 ),
@@ -346,12 +334,12 @@ def create_popup(page, get_products, on_save):
             expand=True,
             spacing=5,
         ),
-        bgcolor=CREAM,
+        bgcolor="#f4ead6",
         border_radius=16,
         width=280,
         height=500,
         padding=ft.Padding.all(10),
-        border=ft.Border.all(1, GREEN),
+        border=ft.Border.all(1, "#3a7f2c"),
     )
 
     overlay = ft.Container(

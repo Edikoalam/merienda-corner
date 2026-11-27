@@ -13,15 +13,6 @@ from db import (
 from pages.orders.Order_card import order_card
 from pages.orders.Order_popup import create_popup
 
-BG = "#fff8e5"
-BROWN = "#894e3f"
-GREEN = "#3a7f2c"
-GREEN_HOVER = "#1C750A"
-ROSE = "#c37960"
-ROSE_HOVER = "#ac5133"
-FONT_TITLE = "Anton"
-FONT = "Poppins"
-
 
 def build(app):
     queue = []
@@ -151,8 +142,8 @@ def build(app):
                             "ORDER HISTORY",
                             size=40,
                             weight=ft.FontWeight.W_600,
-                            font_family=FONT_TITLE,
-                            color=BROWN,
+                            font_family="Anton",
+                            color="#894e3f",
                         ),
                     ),
                     ft.Container(
@@ -161,7 +152,7 @@ def build(app):
                             alignment=ft.MainAxisAlignment.SPACE_AROUND,
                             controls=[
                                 ft.Container(
-                                    bgcolor=ROSE,
+                                    bgcolor="#c37960",
                                     height=40,
                                     width=200,
                                     border_radius=10,
@@ -173,26 +164,26 @@ def build(app):
                                     content=ft.TextButton(
                                         content="CHOOSE DATE RANGE",
                                         style=ft.ButtonStyle(
-                                            color=BG,
+                                            color="#fff8e5",
                                             shape=ft.RoundedRectangleBorder(radius=10),
                                             bgcolor={
-                                                ft.ControlState.DEFAULT: ROSE,
-                                                ft.ControlState.HOVERED: ROSE_HOVER,
+                                                ft.ControlState.DEFAULT: "#c37960",
+                                                ft.ControlState.HOVERED: "#ac5133",
                                             },
                                             text_style={
                                                 ft.ControlState.DEFAULT: ft.TextStyle(
-                                                    font_family=FONT,
+                                                    font_family="Poppins",
                                                     size=14,
                                                     weight=ft.FontWeight.BOLD,
                                                 ),
                                                 ft.ControlState.HOVERED: ft.TextStyle(
-                                                    font_family=FONT,
+                                                    font_family="Poppins",
                                                     weight=ft.FontWeight.BOLD,
                                                 ),
                                             },
                                         ),
                                         icon=ft.Icons.CALENDAR_MONTH,
-                                        icon_color=BG,
+                                        icon_color="#fff8e5",
                                         on_click=lambda _: app.page.show_dialog(picker),
                                     ),
                                 ),
@@ -204,7 +195,7 @@ def build(app):
                         content=orders_column,
                         padding=ft.Padding.symmetric(horizontal=10),
                         expand=True,
-                        bgcolor=BG,
+                        bgcolor="#fff8e5",
                     ),
                 ],
             ),

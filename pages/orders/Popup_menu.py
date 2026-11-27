@@ -1,14 +1,10 @@
 import flet as ft
 
-BG = "#fff8e5"
-DARK = "#3b2a22"
-FONT_BOLD = "Poppins-Bold"
 
-
-def chevron():
+def updown():
     return ft.Container(
-        content=ft.Icon(ft.Icons.KEYBOARD_ARROW_DOWN, size=12, color=BG),
-        bgcolor=DARK,
+        content=ft.Icon(ft.Icons.KEYBOARD_ARROW_DOWN, size=12, color="#fff8e5"),
+        bgcolor="#3b2a22",
         border_radius=20,
         width=14,
         height=14,
@@ -30,14 +26,14 @@ def popup_menu(
         label,
         size=10,
         weight=ft.FontWeight.BOLD,
-        color=DARK if outlined else BG,
-        font_family=FONT_BOLD,
+        color="#3b2a22" if outlined else "#fff8e5",
+        font_family="Poppins-Bold",
         max_lines=1,
         overflow=ft.TextOverflow.ELLIPSIS,
     )
     row_controls = [ft.Container(content=label_text, expand=True)]
     if arrow:
-        row_controls.append(chevron())
+        row_controls.append(updown())
 
     face = ft.Container(
         content=ft.Row(
@@ -48,9 +44,9 @@ def popup_menu(
         width=width,
         height=height,
         padding=ft.Padding.symmetric(horizontal=8),
-        border=ft.Border.all(1.5, DARK) if outlined else None,
+        border=ft.Border.all(1.5, "#3b2a22") if outlined else None,
         border_radius=10 if outlined else 8,
-        bgcolor=None if outlined else DARK,
+        bgcolor=None if outlined else "#3b2a22",
         alignment=ft.Alignment.CENTER_LEFT,
     )
     items = [
