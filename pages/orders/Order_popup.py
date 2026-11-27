@@ -185,12 +185,8 @@ def create_popup(page, get_products, on_save):
                 value=str(item["quantity"]),
                 width=38,
                 height=26,
+                text_size=11,
                 text_align=ft.TextAlign.CENTER,
-                text_style=ft.TextStyle(
-                    weight=ft.FontWeight.BOLD,
-                    size=11,
-                    color=DARK
-                ),
                 content_padding=ft.Padding.all(0),
                 keyboard_type=ft.KeyboardType.NUMBER,
                 input_filter=ft.NumbersOnlyInputFilter(),
@@ -266,6 +262,8 @@ def create_popup(page, get_products, on_save):
     def open_popup(index=None, data=None):
         data = data or {}
         state["index"] = index
+        card.width = min(280, (page.width or 400) - 24)
+        card.height = min(500, (page.height or 800) * 0.75)
 
         name_field.value = data.get("c_name", "")
         address_field.value = data.get("address", "")
@@ -285,8 +283,6 @@ def create_popup(page, get_products, on_save):
         render_items(update=False)
         error_text.value = ""
 
-        card.width = min(320, page.width - 24)
-        card.height = min(500, page.height * 0.75)
         if not overlay.visible:
             overlay.visible = True
         overlay.update()
@@ -328,7 +324,7 @@ def create_popup(page, get_products, on_save):
                         ft.Button(
                             content="DONE",
                             on_click=save,
-                            width=90,
+                            width=85,
                             height=30,
                             style=ft.ButtonStyle(
                                 bgcolor=GREEN,
@@ -341,22 +337,6 @@ def create_popup(page, get_products, on_save):
                                 ),
                             ),
                         ),
-                         ft.Button(
-                                content="Cancel",
-                                on_click=lambda e : close_popup(),
-                                width=95,
-                                height=30,
-                                style=ft.ButtonStyle(
-                                    bgcolor="red",
-                                    color=BG,
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                    text_style=ft.TextStyle(
-                                        font_family=FONT_BOLD,
-                                        size=12,
-                                        weight=ft.FontWeight.BOLD,
-                                    ),
-                                ),
-                            ),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
@@ -368,7 +348,7 @@ def create_popup(page, get_products, on_save):
         ),
         bgcolor=CREAM,
         border_radius=16,
-        width=320,
+        width=280,
         height=500,
         padding=ft.Padding.all(10),
         border=ft.Border.all(1, GREEN),

@@ -192,7 +192,6 @@ def build(app):
     
     months_row = ft.Row(scroll=ft.ScrollMode.AUTO, controls=month_buttons())
     orders_column = ft.Column(
-        expand=True,
         spacing=5,
         scroll=ft.ScrollMode.AUTO,
         horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
@@ -312,10 +311,11 @@ def build(app):
                         ),
                     ),
                     ft.Container(
+                        alignment=ft.Alignment.TOP_CENTER,
                         content=orders_column,
+                        padding=ft.Padding.symmetric(horizontal=10),
                         expand=True,
                         bgcolor=BG,
-                        padding=10,
                     ),
                 ],
             ),

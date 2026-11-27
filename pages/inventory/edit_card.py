@@ -70,9 +70,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
 
     def open_edit_card(item, on_consume,on_restock, e=None):
         print("open")
-        edit_card = card(item, on_consume, on_restock)
-        edit_card.width = min(330, page.width - 24)
-        overlay.content.controls.append(edit_card)
+        overlay.content.controls.append(card(item, on_consume, on_restock))
         overlay.visible = True
         overlay.update()
 
@@ -242,7 +240,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
             )
 
         return ft.Container(
-            width=330,
+            width=min(330, (page.width or 400) - 24),
             bgcolor="#fff8e5",
             border=ft.Border.all(1.5, "#c37960"),
             border_radius=12,
@@ -372,7 +370,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                     ft.Divider(height=1, color="#894e3f"),
                     ft.Container(
                         height=30,
-                        width=320,
+                        width=min(320, (page.width or 400) - 44),
                         bgcolor="#894e3f",
                         alignment=ft.Alignment.CENTER,
                         border_radius=6,
@@ -511,7 +509,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
     
     def new_batch_card(item):
         return ft.Container(
-            width=330,
+            width=min(330, (page.width or 400) - 24),
             bgcolor="#fff8e5",
             border=ft.Border.all(1.5, "#c37960"),
             border_radius=12,
@@ -551,7 +549,7 @@ def create_edit_card(snack, page, get_inventory, show_rows):
                         alignment=ft.Alignment.CENTER,
                         margin=ft.Margin.only(top=7),
                         border_radius=6,
-                        width=330,
+                        width=min(330, (page.width or 400) - 24),
                         padding=ft.Padding.only(left=10, right=10),
                         border=ft.Border.all(1, "#c37960"),
                         content=ft.Column(

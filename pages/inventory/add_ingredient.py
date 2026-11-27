@@ -126,13 +126,13 @@ def create_add_ingredient(page, on_confirm, snack):
         overlay.update()
 
     def open_card(e=None):
+        card.width = min(330, (page.width or 400) - 24)
         name_field.value = ""
         unit_field.value = ""
         qty_field.value = ""
         expiry_field.value = ""
         unit_text.value = "KG"
         name_box.border = ft.Border.all(1, LIGHT_BROWN)
-        card.width = min(330, page.width - 24)
         overlay.visible = True
         overlay.update()
 

@@ -24,10 +24,9 @@ def round_button(icon, on_click, filled):
     )
 
 
-def header_cell(text, width=None, alignment=ft.Alignment.CENTER_LEFT, left=0, expand=False):
+def header_cell(text, width, alignment=ft.Alignment.CENTER_LEFT, left=0):
     return ft.Container(
         width=width,
-        expand=expand,
         alignment=alignment,
         padding=ft.Padding.only(left=left),
         content=ft.Text(
@@ -47,9 +46,8 @@ def inventory_header():
         content=ft.Row(
             spacing=0,
             controls=[
-                header_cell("INGREDIENTS", expand=True),
-                header_cell("QTY.", 32),
-                header_cell("LEFT", 55),
+                ft.Container(expand=True, content=header_cell("INGREDIENTS", None)),
+                header_cell("QTY.", 108, ft.Alignment.CENTER),
                 header_cell("EXP. DATE", 65, ft.Alignment.CENTER),
                 ft.Container(width=28),
             ],

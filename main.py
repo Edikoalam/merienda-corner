@@ -59,13 +59,13 @@ def main(page: ft.Page):
             body.update()
             for i in range(len(NAV_ICONS)):
                 if i != index:
-                    page.bottom_appbar.content.controls[i].content.bgcolor = None
-                    page.bottom_appbar.update()
+                    nav_bar.content.controls[i].content.bgcolor = None
+                    nav_bar.update()
             if index == 5:
                 on_show()
             else:
-                page.bottom_appbar.content.controls[index].content.bgcolor = "#6b382b" 
-                page.bottom_appbar.update()
+                nav_bar.content.controls[index].content.bgcolor = "#6b382b" 
+                nav_bar.update()
                 on_show()
 
     pages = [
@@ -79,7 +79,7 @@ def main(page: ft.Page):
 
     body = ft.Container(expand=True, content=pages[0][0])
 
-    page.bottom_appbar = ft.BottomAppBar(
+    nav_bar = ft.Container(
         bgcolor="#894e3f",
         height=70,
         content=ft.Row(
@@ -101,7 +101,7 @@ def main(page: ft.Page):
     )
 
     app.stack.controls.append(body)
-    page.add(ft.SafeArea(expand=True, content=app.stack))
+    page.add(ft.SafeArea(expand=True, content=ft.Column(expand=True, spacing=0, controls=[app.stack, nav_bar])))
     pages[0][1]()
 
 
